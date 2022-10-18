@@ -1,0 +1,82 @@
+<resources>
+    <string name="app_name">Smart Flash Cards</string>
+    <string name="database_version">0.01</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_delete_selection">Delete Selection</string>
+    <string name="action_review_selection">Review Selection</string>
+    <string name="action_edit_selection">Edit Selection</string>
+    <string name="action_review_details">Review Details</string>
+    <string name="action_edit_question">Edit Question</string>
+    <string name="action_review_quiz_stack">Review Quiz Stack</string>
+    <string name="action_randomize">Reset and Randomize</string>
+    <string name="action_clear_statistics">Clear Statistics</string>
+    <!-- Strings used for directories and files -->
+    <string name="stack_directory">stackDir</string>
+    <string name="stack_details_file">stack_details</string>
+    <string name="answer_card_file">answer_cards</string>
+    <string name="quiz_card_file">quiz_cards</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">Main Menu</string>
+    <string name="stack_selection_fragment_label">STACK SELECTION</string>
+    <string name="quizme_fragment_label">QUIZ</string>
+    <string name="stack_view_fragment_label">REVIEW/EDIT FLASHCARDS</string>
+    <string name="card_editor_fragment_label">FLASHCARD EDITOR</string>
+    <string name="quizmeButton">Quiz Me</string>
+    <string name="reviewStackButton">Review/Edit Stack</string>
+    <string name="reviewCardButton">Review/Edit Flashcard</string>
+    <string name="loadStackButton_noStackSelected">Please Select a Stack</string>
+    <string name="previous">Return to main menu</string>
+    <!-- Strings used for other buttons -->
+    <string name="continueButton">Continue</string> <!--TODO: replace all uses with more descriptive actions -->
+    <string name="cancelButton">Cancel</string>
+    <string name="changeButton">Change</string>
+    <string name="removeButton">Remove</string>
+    <string name="saveButton">Save</string>
+    <string name="submitButton">Submit</string>
+    <string name="showListButton">Show list</string>
+    <string name="illustrationsButton">Generate Illustrations</string>
+    <!-- String for text that shouldn't show because it's supposed to be replaced dynamically -->
+    <string name="error">ERROR - debug required</string>
+    <!-- Strings for stack details TODO: can I put these in a custom values/stack_details.xml file? -->
+    <string name="stack_description">Stack description</string>
+    <string name="stack_question_verbiage">Question label (example: [English word or phrase]):</string>
+    <string name="stack_question_default">Question</string>
+    <string name="stack_question_prepost">"Enter any needed text and/or punctuation to surround every question (example: [¿Cómo se dice \"] and [\"?]):</string>
+    <string name="stack_question_pre_hint">prefix</string>
+    <string name="stack_question_post_hint">postfix</string>
+    <string name="stack_question_prefix">\u0002</string>
+    <string name="stack_question_postfix">\?</string>
+    <string name="stack_jeopardy_verbiage">Answer label (example: [Palabra o frase en español]):</string>
+    <string name="stack_answer_default">Answer</string>
+    <string name="stack_jeopardy_pre_hint">prefix</string>
+    <string name="stack_jeopardy_post_hint">postfix</string>
+    <string name="stack_jeopardy_prepost">Enter any needed text and/or punctuation to surround every answer to make reverse question (example: [How do you say \"] and [\"?]):</string>
+    <string name="stack_jeopardy_pretfix">\u0002</string>
+    <string name="stack_jeopardy_postfix">\?</string>
+    <!-- Strings for quiz card review -->
+    <string name="positionLabel">Current Position:</string>
+    <string name="placementLabel">Last Placement:</string>
+    <string name="wrongResponsesLabel">Number of Wrong Responses:</string>
+    <string name="quizCardReviewColumn1Header">Answer with correct response count:</string>
+    <string name="quizCardReviewColumn2Header">#</string>
+
+    <string name="stack_selection_prompt">Select flashcard stack:</string>
+    <string name="hello_first_fragment">What do you want to do?</string>
+    <string name="new_stack_title">Enter name for your new flashcard stack</string>
+    <string name="new_stack_message">Allowed characters are capital letters, numbers, and underscores.</string>
+    <string name="new_stack_hint">NEW_FLASHCARD_NAME</string>
+    <string name="placement_prompt">Enter a number for the position in the stack to place a new flashcard.</string>
+    <string name="placement_radio_button">Click for end-of-stack</string>
+    <string name="toggle_view_prompt">Press this button to switch view:  </string>
+    <string name="quizme_default">No flashcards found, add one to begin.</string>
+    <string name="quizme_hint">type your response</string>
+    <string name="right_answer">CORRECT!</string>
+    <string name="wrong_answer">Sorry, response did not match known correct answers.</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="something_wrong">Something went wrong</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="jeopardy_card_label">\"Jeopardy Card: \"</string>
+
+</resources>

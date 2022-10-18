@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:name="com.example.smartflashcards.StackViewFragment"
+    tools:context=".recyclers.stackView.AlphabeticalStackViewFragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:stateListAnimator="@null">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/questionLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:text="@string/error" />
+
+        <TextView
+            android:id="@+id/questionTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="32dp"
+            android:text="@string/error" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            android:background="?android:attr/listDivider" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/positionLabel"
+                android:layout_width="250dp"
+                android:layout_height="wrap_content"
+                android:text="@string/positionLabel" />
+            <TextView
+                android:id="@+id/positionTextView"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:text="@string/error" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            android:background="?android:attr/listDivider" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/placementLabel"
+                android:layout_width="250dp"
+                android:layout_height="wrap_content"
+                android:text="@string/placementLabel" />
+            <TextView
+                android:id="@+id/placementTextView"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:text="@string/error" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            android:background="?android:attr/listDivider" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/wrongResponsesLabel"
+                android:layout_width="250dp"
+                android:layout_height="wrap_content"
+                android:text="@string/wrongResponsesLabel" />
+            <TextView
+                android:id="@+id/wrongResponsesTextView"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:text="@string/error" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            android:background="?android:attr/listDivider" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/column1Header"
+                android:layout_width="300dp"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceListItem"
+                android:text="@string/quizCardReviewColumn1Header" />
+            <TextView
+                android:id="@+id/column2Header"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceListItem"
+                android:textAlignment="center"
+                android:text="@string/quizCardReviewColumn2Header" />
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/answers"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:listitem="@layout/listitem_one_column" />
+    </LinearLayout>
+
+</RelativeLayout>

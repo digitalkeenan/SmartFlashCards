@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/FirstFragment">
+
+    <fragment
+        android:id="@+id/FirstFragment"
+        android:name="com.example.smartflashcards.FirstFragment"
+        android:label="@string/first_fragment_label"
+        tools:layout="@layout/fragment_first">
+
+        <action
+            android:id="@+id/action_FirstFragment_to_stackSelectionFragment"
+            app:destination="@id/stackSelectionFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim" />
+        <action
+            android:id="@+id/action_FirstFragment_to_quizmeFragment"
+            app:destination="@id/quizmeFragment" />
+        <action
+            android:id="@+id/action_FirstFragment_to_stackViewFragment"
+            app:destination="@id/alphabeticalStackViewFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/stackSelectionFragment"
+        android:name="com.example.smartflashcards.recyclers.stackSelection.StackSelectionFragment"
+        android:label="@string/stack_selection_fragment_label"
+        tools:layout="@layout/fragment_stack_selection_list" >
+        <action
+            android:id="@+id/action_stackSelectionFragment_to_stackDetailsFragment"
+            app:destination="@id/stackDetailsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/quizmeFragment"
+        android:name="com.example.smartflashcards.QuizMeFragment"
+        android:label="@string/quizme_fragment_label"
+        tools:layout="@layout/fragment_quizme" >
+        <action
+            android:id="@+id/action_quizmeFragment_to_cardEditorFragment"
+            app:destination="@id/cardEditorFragment" />
+        <action
+            android:id="@+id/action_quizmeFragment_to_quizStackViewFragment"
+            app:destination="@id/quizStackViewFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/alphabeticalStackViewFragment"
+        android:name="com.example.smartflashcards.recyclers.stackView.AlphabeticalStackViewFragment"
+        android:label="@string/stack_view_fragment_label"
+        tools:layout="@layout/fragment_stack_view_list" >
+        <action
+            android:id="@+id/action_alphabeticalStackViewFragment_to_cardEditorFragment"
+            app:destination="@id/cardEditorFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/cardEditorFragment"
+        android:name="com.example.smartflashcards.recyclers.cardEditor.CardEditorFragment"
+        android:label="@string/card_editor_fragment_label"
+        tools:layout="@layout/fragment_card_editor" />
+    <fragment
+        android:id="@+id/stackDetailsFragment"
+        android:name="com.example.smartflashcards.stackDetails.StackDetailsFragment"
+        android:label="fragment_stack_details"
+        tools:layout="@layout/fragment_stack_details" >
+        <action
+            android:id="@+id/action_stackDetailsFragment_pop"
+            app:popUpTo="@id/stackDetailsFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/quizStackViewFragment"
+        android:name="com.example.smartflashcards.recyclers.stackView.QuizStackViewFragment"
+        android:label="QuizStackViewFragment" >
+        <action
+            android:id="@+id/action_quizStackViewFragment_to_cardEditorFragment"
+            app:destination="@id/cardEditorFragment" />
+        <action
+            android:id="@+id/action_quizStackViewFragment_to_quizCardReviewFragment"
+            app:destination="@id/quizCardReviewFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/quizCardReviewFragment"
+        android:name="com.example.smartflashcards.recyclers.quizCardReview.QuizCardReviewFragment"
+        android:label="QuizCardReviewFragment" />
+</navigation>

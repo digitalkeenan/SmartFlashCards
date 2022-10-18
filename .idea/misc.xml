@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.298" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/drawable/ic_launcher_background.xml" value="0.298" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/drawable/item_background.xml" value="0.1885" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/activity_main.xml" value="0.18802083333333333" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/content_main.xml" value="0.18802083333333333" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/fragment_card_builder_dialog.xml" value="0.25" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/fragment_card_editor.xml" value="0.21784420289855072" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/fragment_continue_dialog.xml" value="0.21784420289855072" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/fragment_continue_or_cancel_dialog.xml" value="0.20742753623188406" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/fragment_first.xml" value="0.2644927536231884" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/fragment_new_card_dialog.xml" value="0.36666666666666664" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/fragment_new_stack_dialog.xml" value="0.17831813576494426" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/fragment_propose_card_review_dialog.xml" value="0.21784420289855072" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/fragment_quiz_card_review.xml" value="0.33" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/fragment_quizme.xml" value="0.32135416666666666" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/fragment_remove_change_cancel_dialog.xml" value="0.20742753623188406" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/fragment_second.xml" value="0.25" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/fragment_stack_details.xml" value="0.25" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/fragment_stack_selection.xml" value="0.21510416666666668" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/fragment_stack_selection_list.xml" value="0.20104166666666667" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/fragment_stack_selection_list_backup.xml" value="0.32395833333333335" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/fragment_stack_view_list.xml" value="0.33" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/listitem_one_column.xml" value="0.21784420289855072" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/listitem_two_columns.xml" value="0.21105072463768115" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/layout/temp_layout.xml" value="0.35260416666666666" />
+        <entry key="..\:/Users/digit/AndroidStudioProjects/SmartFlashCards/app/src/main/res/menu/menu_main.xml" value="0.1734375" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>
