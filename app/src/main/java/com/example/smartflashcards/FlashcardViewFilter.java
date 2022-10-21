@@ -17,17 +17,17 @@ public class FlashcardViewFilter {
     }
 
     private StackType stackType;
-    private Boolean filterMode;
+    private boolean filterMode;
     private String filterPattern;
     private int filterPageSize; //TODO: perhaps add a user setting for filter page size
-    private ArrayList<String> filterList;
-    private ArrayList<Integer> filterStackPositions;
-    private CardTreeNode lastFilterNode;
+    private ArrayList<CardTreeNode> filterNodes;
+    private CardTreeNode clickForMoreNode;
+    private boolean filterComplete;
 
     //pointer back to the flashcardStack
     private FlashcardStack flashcardStack;
 
-    public static String more = "Click for more...";
+    private static String clickForMore = "Click for more...";
 
     FlashcardViewFilter(FlashcardStack flashcardStack) {
         this.flashcardStack = flashcardStack;
@@ -35,15 +35,16 @@ public class FlashcardViewFilter {
         this.filterMode = false;
         this.filterPattern = "";
         this.filterPageSize = 2;
-        this.filterList = new ArrayList<>();
-        this.filterStackPositions = new ArrayList<>();
+        this.filterNodes = new ArrayList<>();
+        this.clickForMoreNode = new CardTreeNode(0, new FlashCard(clickForMore));
+        this.filterComplete = false;
     }
 
 
     /**
      * SETTERS
      */
-    public Boolean setStackType(StackType newStackType) {
+    public boolean setStackType(StackType newStackType) {
         if (newStackType == this.stackType) {
             return false;
         }
@@ -65,7 +66,7 @@ public class FlashcardViewFilter {
         return this.stackType;
     }
 
-    public Boolean getFilterMode() {
+    public boolean getFilterMode() {
         return this.filterMode;
     }
 
@@ -73,8 +74,8 @@ public class FlashcardViewFilter {
         return this.filterPattern;
     }
 
-    public ArrayList<String> getFilterList() {
-        return this.filterList;
+    public boolean getFilterComplete() {
+        return filterComplete;
     }
 
 
@@ -93,31 +94,33 @@ public class FlashcardViewFilter {
         return this.flashcardStack.getQuestionCardStack(); // default selection
     }
 
+    public void clearFilter() {
+        this.filterMode = false;
+    }
+
     public void startFilter(String pattern, int pageSize) {
         setFilterPageSize(pageSize);
         this.filterPattern = pattern;
         startFilter();
     }
-    public void startFilter() {
+    private void startFilter() {
         this.filterMode = true;
-        this.filterList = new ArrayList<>();
-        this.filterStackPositions = new ArrayList<>();
-        getViewStack().moveToFirst();
-        Boolean foundOne = updateFilterList();
-        while (foundOne && (getFilterList().size() < (filterPageSize - 1))) {
-            foundOne = addOneToFilter();
-        }
+        this.filterComplete = false;
+        this.filterNodes = new ArrayList<>();
+        addToFilterList();
     }
 
     public int addToFilterList(int pageSize) {
         setFilterPageSize(pageSize);
+        return addToFilterList();
+    }
+    private int addToFilterList() {
         int itemsAdded = 0;
-        while (itemsAdded < (filterPageSize - 1)) {
+        while (itemsAdded < (this.filterPageSize - 1)) {
             if (addOneToFilter()) {
                 itemsAdded++;
             } else {
-                // if it didn't find another, it removed "more"
-                return itemsAdded - 1;
+                return itemsAdded;
             }
         }
         return itemsAdded;
@@ -125,80 +128,93 @@ public class FlashcardViewFilter {
 
     private Boolean addOneToFilter() {
         // TRUE = added one
-        // FALSE = removed "more" (or not in filter mode)
+        // FALSE = filter complete or not in filter mode
         if (this.filterMode) {
-            getViewStack().setCurrentNode(this.lastFilterNode);
-            getViewStack().nextSequential();
-            return updateFilterList();
-        }
-        return false;
-    }
-
-    public void clearFilter() {
-        this.filterMode = false;
-    }
-
-    private boolean updateFilterList() {
-        // for start, this returns true if found one, else false
-        // for add, TRUE = added one, FALSE = removed "more"
-        getViewStack().findNextContains(this.filterPattern);
-        this.lastFilterNode = getViewStack().getCurrentNode();
-        if (stackType == StackType.QUIZ) {
-            while (nonNull(this.lastFilterNode) && !this.flashcardStack.quizCardValidate(true)) {
-                getViewStack().findNextContains(this.filterPattern);
-                this.lastFilterNode = getViewStack().getCurrentNode();
-            }
-        }
-        int lastIndex = this.filterList.size() - 1;
-        if (nonNull(this.lastFilterNode)) {
-            this.filterStackPositions.add(getViewStack().getPosition());
-            if ((lastIndex > 0) && (this.filterList.get(lastIndex).equals(more))) {
-                this.filterList.add(lastIndex, this.lastFilterNode.getCard().getCardText());
+            // initialize current node to the first node or the node after the last one on the list
+            int lastPosition = this.filterNodes.size() - 1;
+            if (lastPosition < 0) {
+                getViewStack().moveToFirst();
             } else {
-                this.filterList.add(this.lastFilterNode.getCard().getCardText());
-                this.filterList.add(more);
+                getViewStack().setCurrentNode(this.filterNodes.get(lastPosition));
+                getViewStack().nextSequential();
             }
-            return true;
-        } else {
-            if ((lastIndex > 0) && (this.filterList.get(lastIndex).equals(more))) {
-                this.filterList.remove(lastIndex);
+
+            // find next pattern match (else set currentNode to null)
+            getViewStack().findNextContains(this.filterPattern);
+            CardTreeNode currentNode = getViewStack().getCurrentNode();
+            if (stackType == StackType.QUIZ) {
+                while (nonNull(currentNode) && !this.flashcardStack.quizCardValidate(true)) {
+                    getViewStack().findNextContains(this.filterPattern);
+                    currentNode = getViewStack().getCurrentNode();
+                }
             }
+
+            // if found one, add it to the list and return true
+            if (nonNull(currentNode)) {
+                if (filterComplete) {
+                    this.filterNodes.add(currentNode);
+                } else {
+                    // if filter not complete, add before clickForMore
+                    int lastIndex = filterSize() - 1;
+                    this.filterNodes.add(lastIndex, currentNode);
+                }
+                return true;
+            }
+
+            // if no more were found, set complete and return false;
+            this.filterComplete = true;
         }
         return false;
     }
 
-    private void moveToPosition(int position) {
+    private boolean moveToPosition(int position) {
         if (getFilterMode()) {
-            if (position < this.filterStackPositions.size()) {
-                getViewStack().moveToPosition(this.filterStackPositions.get(position));
+            if (position < this.filterNodes.size()) {
+                getViewStack().setCurrentNode(this.filterNodes.get(position));
+                return true;
             }
-        } else {
-            getViewStack().moveToPosition(position);
+            return false;
         }
+        getViewStack().moveToPosition(position);
+        return true;
     }
 
+    private CardTreeNode getFilterNode(int position) {
+        if (position < this.filterNodes.size()) {
+            return this.filterNodes.get(position);
+        }
+        if (!this.filterComplete && (position == this.filterNodes.size())) {
+            return this.clickForMoreNode;
+        }
+        return null;
+    }
     public CardTreeNode getNode(int position) {
-        moveToPosition(position);
-        CardTreeNode node = getViewStack().getCurrentNode();
-        return node;
+        if (getFilterMode()) {
+            return getFilterNode(position);
+        }
+        getViewStack().moveToPosition(position);
+        return getViewStack().getCurrentNode();
     }
 
     public FlashCard getFlashCard(int position) {
-        moveToPosition(position);
-        FlashCard flashCard = getViewStack().getCard();
-        return flashCard;
+        if (moveToPosition(position)) {
+            FlashCard flashCard = getViewStack().getCard();
+            return flashCard;
+        }
+        return null;
     }
 
     public Integer findItem() { // before calling this, make sure currentCard is set to the target
         int position = getViewStack().getPosition();
         if (getFilterMode()) {
-            int lastPosition = this.filterStackPositions.size() - 1;
-            if (position <= this.filterStackPositions.get(lastPosition)) {
+            // capture string before currentNode can change //TODO: does this go away when no longer storing strings here?
+            String item = getViewStack().getCard(position).getCardText();
+            int lastPosition = this.filterNodes.size() - 1;
+            if (position <= getStackPosition(lastPosition)) {
                 // position is within bounds of current list
-                String item = getViewStack().getCard(position).getCardText();
                 if (item.contains(this.filterPattern)) {
                     int index = 0;
-                    while (this.filterStackPositions.get(index) < position) {
+                    while (getStackPosition(index) < position) {
                         index++;
                     }
                     return index;
@@ -212,33 +228,31 @@ public class FlashcardViewFilter {
 
     public Integer addItem() { // before calling this, make sure currentCard is set to the new one
         // returns position of new item
-        int position = getViewStack().getPosition();
-        String item = getViewStack().getCard(position).getCardText();
+        int stackPosition = getViewStack().getPosition();
+        String item = getViewStack().getCard(stackPosition).getCardText();
+        CardTreeNode node = getViewStack().getCurrentNode();
         if (getFilterMode()) {
-            int lastPosition = this.filterStackPositions.size() - 1;
+            int lastPosition = this.filterNodes.size() - 1;
             if (lastPosition < 0) {
                 if (item.contains(this.filterPattern)) {
-                    this.filterList.add(item);
-                    this.filterStackPositions.add(position);
+                    this.filterNodes.add(node);
                     return 0;
                 }
             } else {
-                if (position < this.filterStackPositions.get(lastPosition)) {
+                if (stackPosition < getStackPosition(lastPosition)) {
                     // position is within bounds of current list
                     if (item.contains(this.filterPattern)) {
                         int index = 0;
-                        while (this.filterStackPositions.get(index) < position) {
+                        while (getStackPosition(index) < stackPosition) {
                             index++;
                         }
-                        this.filterList.add(index, item);
-                        this.filterStackPositions.add(index, position);
+                        this.filterNodes.add(index, node);
                         return index;
                     }
-                } else if ((this.filterList.size() - 1) == lastPosition) { // no extra entry for "more"
-                    // if no more, can add new item to end of list
+                } else if (filterComplete) {
+                    // if no clickForMore, can add new item to end of list
                     if (item.contains(this.filterPattern)) {
-                        this.filterList.add(item);
-                        this.filterStackPositions.add(position);
+                        this.filterNodes.add(node);
                         return lastPosition + 1;
                     }
                 }
@@ -246,15 +260,17 @@ public class FlashcardViewFilter {
             return null; // item either out of range or doesn't match pattern
         }
         // if not in filter mode, just return the currentCard position
-        return position;
+        return stackPosition;
     }
 
     public void deleteItem(Integer position) {
-        if (nonNull(position)) {
-            if (getFilterMode()) {
-                this.filterList.remove(position);
-            }
+        if (nonNull(position) && getFilterMode()) {
+            removeItem(position);
         }
+    }
+    private void removeItem(int position) {
+        // position must be int instead of Integer to call remove(int) instead of remove(object)
+        this.filterNodes.remove((int) position);
     }
 
     public Integer renameQuestion(int oldPosition, String oldText, String newText, int placement) {
@@ -266,7 +282,7 @@ public class FlashcardViewFilter {
                 this.flashcardStack.getQuestionCardStack().rename(oldText, newText, false);
                 this.flashcardStack.addQuizCard(newText, placement);
                 if (getFilterMode()) {
-                    this.filterList.remove(oldPosition);
+                    removeItem(oldPosition);
                     newPosition = addItem();
                 } else {
                     newPosition = this.flashcardStack.getQuestionCardStack().getPosition();
@@ -283,7 +299,7 @@ public class FlashcardViewFilter {
                 this.flashcardStack.getQuestionCardStack().rename(oldText, newText, true);
                 this.flashcardStack.getQuizStack().getCard().modifyCardText(newText);
                 if (getFilterMode()) {
-                    this.filterList.remove(oldPosition);
+                    removeItem(oldPosition);
                     newPosition = addItem();
                 } else {
                     newPosition = oldPosition;
@@ -295,8 +311,8 @@ public class FlashcardViewFilter {
 
     public String getString(int position) {
         if (getFilterMode()) {
-            if (position < getFilterList().size()) {
-                return getFilterList().get(position);
+            if (position < filterSize()) {
+                return getFilterNode(position).getCard().getCardText();
             }
         } else {
             if (nonNull(getViewStack().getCard(position))) {
@@ -320,30 +336,40 @@ public class FlashcardViewFilter {
 
     public int getSize() {
         if (getFilterMode()) {
-            return getFilterList().size();
+            return filterSize();
         } else {
             return getViewStack().size();
         }
     }
+    private int filterSize() {
+        if (filterComplete) {
+            return this.filterNodes.size();
+        }
+        return this.filterNodes.size() + 1;
+    }
 
     public Integer getViewPosition(CardTreeNode node) {
         // Returns null if the node is null or not in the tree
-        getViewStack().setCurrentNode(node);
-        Integer stackPosition = getViewStack().getPosition();
-        if (nonNull(stackPosition) && getFilterMode()) {
-            int viewPosition = this.filterStackPositions.indexOf(stackPosition);
-            if (viewPosition < 0) {
-                return null;
+        if (getFilterMode()) {
+            if (this.filterNodes.contains(node)) {
+                return this.filterNodes.indexOf(node);
             }
-            return viewPosition;
+            if (node == clickForMoreNode) {
+                // return the position AFTER all the nodes in the list
+                return this.filterNodes.size();
+            }
+            return null;
         }
-        return stackPosition;
+        getViewStack().setCurrentNode(node);
+        return getViewStack().getPosition();
     }
 
+    // TODO: review usages of this to see if they should just pass in the node
     public Integer getStackPosition(Integer viewPosition) {
         if (nonNull(viewPosition) && getFilterMode()) {
-            if (this.filterStackPositions.size() > viewPosition) {
-                return this.filterStackPositions.get(viewPosition);
+            if (this.filterNodes.size() > viewPosition) {
+                getViewStack().setCurrentNode(this.filterNodes.get(viewPosition));
+                return getViewStack().getPosition();
             }
             return null;
         }

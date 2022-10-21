@@ -48,7 +48,7 @@ public class ContinueOrCancelDialogFragment extends DialogStackFragment {
                             case deleteAnswerFromQuestionCard:
                                 cardStackViewModel.deleteAnswerFromQuestionCard(
                                         dialogData.getDataString(),
-                                        (QuestionCard) dialogData.getFlashCard());
+                                        (QuestionCard) dialogData.getFlashCard(), false);
                                 break;
                             case deleteQuestion:
                                 cardStackViewModel.deleteQuestion(dialogData.getDataString());

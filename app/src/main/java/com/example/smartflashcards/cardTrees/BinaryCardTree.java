@@ -57,9 +57,6 @@ public class BinaryCardTree extends BinaryTree {
         return newNode;
     }
 
-    public CardTreeNode addToEnd (FlashCard card) {
-        return addToEnd(card, getAndIncrementNextID());
-    }
     public CardTreeNode addToEnd (FlashCard card, int idNumber) {
         CardTreeNode newNode = new CardTreeNode(idNumber, card);
         addToEnd(newNode);

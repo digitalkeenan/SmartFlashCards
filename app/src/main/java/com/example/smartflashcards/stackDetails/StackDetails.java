@@ -6,6 +6,8 @@ import com.example.smartflashcards.R;
 import com.example.smartflashcards.keenanClasses.MyFileInputStream;
 import com.example.smartflashcards.keenanClasses.MyFileOutputStream;
 
+import java.util.Locale;
+
 public class StackDetails {
 
     private String databaseVersion;
@@ -16,6 +18,8 @@ public class StackDetails {
     private String answerLabel;
     private String jeopardyPrefix;
     private String jeopardyPostfix;
+    private Locale questionLocale;
+    private Locale answerLocale;
 
     public StackDetails(Context context) {
         this.databaseVersion = context.getString(R.string.database_version);
@@ -26,6 +30,8 @@ public class StackDetails {
         this.answerLabel = context.getString(R.string.stack_answer_default);
         this.jeopardyPrefix = context.getString(R.string.stack_jeopardy_pretfix);
         this.jeopardyPostfix = context.getString(R.string.stack_jeopardy_postfix);
+        this.questionLocale = Locale.ENGLISH;
+        this.answerLocale = Locale.ENGLISH;
     }
 
     public StackDetails(MyFileInputStream inputStream) {
@@ -37,6 +43,8 @@ public class StackDetails {
         this.answerLabel = inputStream.readString();
         this.jeopardyPrefix = inputStream.readString();
         this.jeopardyPostfix = inputStream.readString();
+        this.questionLocale = Locale.ENGLISH;
+        this.answerLocale = new Locale("es");
     }
 
     public void writeFile(String databaseVersion, MyFileOutputStream outputStream) {
@@ -49,6 +57,7 @@ public class StackDetails {
         outputStream.writeString(this.jeopardyPrefix);
         outputStream.writeString(this.jeopardyPostfix);
     }
+
 
     public void setDescription(String string) {
         this.description = string;
@@ -78,6 +87,15 @@ public class StackDetails {
         this.jeopardyPostfix = string;
     }
 
+    public void setQuestionLocale(Locale locale) {
+        this.questionLocale = locale;
+    }
+
+    public void setAnswerLocale(Locale locale) {
+        this.answerLocale = locale;
+    }
+
+
     public String getDatabaseVersion() {
         return this.databaseVersion;
     }
@@ -95,18 +113,26 @@ public class StackDetails {
     }
 
     public String getQuestionPostfix() {
-        return questionPostfix;
+        return this.questionPostfix;
     }
 
     public String getAnswerLabel() {
-        return answerLabel;
+        return this.answerLabel;
     }
 
     public String getJeopardyPrefix() {
-        return jeopardyPrefix;
+        return this.jeopardyPrefix;
     }
 
     public String getJeopardyPostfix() {
-        return jeopardyPostfix;
+        return this.jeopardyPostfix;
+    }
+
+    public Locale getQuestionLocale() {
+        return this.questionLocale;
+    }
+
+    public Locale getAnswerLocale() {
+        return this.answerLocale;
     }
 }

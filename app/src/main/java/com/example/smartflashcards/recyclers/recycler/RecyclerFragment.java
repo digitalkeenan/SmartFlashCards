@@ -99,9 +99,8 @@ public class RecyclerFragment extends Fragment {
         }
     }
 
-    // better to override these two methods to use keys that stay with items regardless of position
     public Object getItemKey(int position) {
-        return (long) position;
+        return this.adapter.getItemKey(position);
     }
     public Integer getItemPosition(Object key) {
         if (nonNull(key)) {
@@ -292,7 +291,7 @@ public class RecyclerFragment extends Fragment {
             @Override
             public void run() {
                 adapter.notifyItemRangeInserted(position, count);
-                // no selection change; if needed, call notifySelectionChanged
+                selectItem(position);
             }
         });
     }
@@ -306,14 +305,15 @@ public class RecyclerFragment extends Fragment {
                 } else {
                     adapter.notifyDataSetChanged();
                 }
-                // Select the item that follows the removed item; else select the last item
-                // (this would happen automatically for default keys=positions)
+                // Select the item that precedes the removed item; else select the first item
+                // next/last item would be more natural (and automatic for default keys=positions)
+                // however, this avoids selecting clickForMore
                 int itemCount = adapter.getItemCount();
                 if (fixSelection && (itemCount > 0)) {
-                    if (position < itemCount) {
-                        selectItem(position);
+                    if (position > 0) {
+                        selectItem(position - 1);
                     } else {
-                        selectItem(itemCount - 1);
+                        selectItem(0);
                     }
                 }
             }

@@ -20,9 +20,6 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.selection.ItemDetailsLookup;
 import androidx.recyclerview.selection.ItemKeyProvider;
-import androidx.recyclerview.selection.SelectionPredicates;
-import androidx.recyclerview.selection.SelectionTracker;
-import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -31,8 +28,6 @@ import com.example.smartflashcards.R;
 import com.example.smartflashcards.cards.QuestionCard;
 import com.example.smartflashcards.cards.QuizCard;
 import com.example.smartflashcards.databinding.FragmentQuizCardReviewBinding;
-import com.example.smartflashcards.databinding.FragmentStackViewListBinding;
-import com.example.smartflashcards.recyclers.cardEditor.CardEditorRecyclerViewAdapter;
 
 public class QuizCardReviewFragment extends Fragment {
 

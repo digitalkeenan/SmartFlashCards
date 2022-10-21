@@ -16,7 +16,6 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.smartflashcards.cardTrees.AlphabeticalCardTree;
 import com.example.smartflashcards.CardStackViewModel;
 import com.example.smartflashcards.cardTrees.CardTreeNode;
-import com.example.smartflashcards.FlashcardViewFilter;
 import com.example.smartflashcards.R;
 import com.example.smartflashcards.databinding.FragmentStackViewListBinding;
 import com.example.smartflashcards.recyclers.recycler.RecyclerFragment;
@@ -26,6 +25,8 @@ public class StackViewFragment extends RecyclerFragment {
     protected CardStackViewModel cardStackViewModel;
 
     protected FragmentStackViewListBinding binding;
+
+    protected Boolean clickForMoreInProgress;
 
     /**
      * Mandatory constructor for the fragment manager to instantiate the
@@ -59,12 +60,6 @@ public class StackViewFragment extends RecyclerFragment {
     }
 
     @Override
-    public Object getItemKey(int position) {
-        CardTreeNode itemKey = this.cardStackViewModel.getViewNode(position);
-        return itemKey;
-    }
-
-    @Override
     public Integer getItemPosition(Object key) {
         CardTreeNode node = (CardTreeNode) key;
         Integer itemPosition = this.cardStackViewModel.getViewPosition(node);
@@ -79,37 +74,52 @@ public class StackViewFragment extends RecyclerFragment {
         if (nonNull(mySelectionPosition)) {
             this.cardStackViewModel.setSelectionPosition(mySelectionPosition);
             if (this.cardStackViewModel.getFilterMode()) {
-                int lastPosition = this.cardStackViewModel.getFilterList().size() - 1;
+                int lastPosition = this.cardStackViewModel.getViewSize() - 1;
                 if ((lastPosition >= 0)
                         && (mySelectionPosition == lastPosition)
-                        && getItemString(lastPosition).equals(FlashcardViewFilter.more)) {
-                    int itemsAdded = cardStackViewModel.addToFilterList(getVisibleItemCount());
-                    if (itemsAdded < 0) {
-                        // removed "more"
-                        notifyItemRemoved(lastPosition, true);
-                    } else {
-                        if (itemsAdded > 0) {
-                            notifyItemRangeInserted(lastPosition, itemsAdded);
-                        }
-                        String lastItem = this.cardStackViewModel.getFilterList().get(lastPosition + itemsAdded);
-                        if (lastItem.equals(FlashcardViewFilter.more)) {
-                            // selection is already on first new item
-                        } else {
-                            // replaced "more" with a real item
-                            notifyItemChanged(lastPosition + itemsAdded);
-                        }
-                    }
+                        && !this.cardStackViewModel.getViewFilterComplete()) {
+                    addToFilterList(lastPosition);
                 }
             }
         }
         return mySelectionPosition;
     }
 
-    private void startFilter (String pattern) {
+    private void startFilter(String pattern) {
         if (nonNull(pattern)) {
             this.cardStackViewModel.startFilter(pattern, getVisibleItemCount());
             this.cardStackViewModel.setSelectionPosition(0);
             notifyDataSetChanged();
+        }
+    }
+    private void addToFilterList(int lastPosition) {
+        // pushing this to the UI for the case in which it is executed automatically:
+        // when the user deletes every item in the filter leaving only clickForMore to be selected
+        if (nonNull(this.clickForMoreInProgress) && this.clickForMoreInProgress) {
+            // ignore this command
+        } else {
+            this.clickForMoreInProgress = true;
+            recyclerView.post(new Runnable() {
+                @Override
+                public void run() {
+                    int itemsAdded = cardStackViewModel.addToFilterList(getVisibleItemCount());
+                    if (cardStackViewModel.getViewFilterComplete()) {
+                        if (itemsAdded == 0) {
+                            // removed clickForMore
+                            notifyItemRemoved(lastPosition, true);
+                        } else {
+                            if (itemsAdded > 1) {
+                                notifyItemRangeInserted(lastPosition, itemsAdded - 1);
+                            }
+                            // replaced clickForMore with a real item
+                            notifyItemChanged(cardStackViewModel.getViewSize() - 1);
+                        }
+                    } else {
+                        notifyItemRangeInserted(lastPosition, itemsAdded);
+                    }
+                    clickForMoreInProgress = false;
+                }
+            });
         }
     }
 

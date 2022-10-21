@@ -53,6 +53,7 @@ public class CardStackViewModel extends ViewModel {
     private final MutableLiveData<Integer> stackMovedItem = new MutableLiveData<>();
 
     // CARD EDITOR STUFF //////////////////////////////////////////////////////////////////////////
+    private FlashCard reviewCard;
     // flag only selection changed (when other flags below are not set)
     private final MutableLiveData<Integer> cardSelectionChanged = new MutableLiveData<>();
     // provide position for notifyItemAdded
@@ -134,6 +135,9 @@ public class CardStackViewModel extends ViewModel {
     }
 
     // CARD EDITOR STUFF //////////////////////////////////////////////////////////////////////////
+    public void setReviewCard(FlashCard flashCard) {
+        this.reviewCard = flashCard;
+    }
     public void clearCardNotifications() {
         this.cardSelectionChanged.setValue(null);
         this.cardNewItem.setValue(null);
@@ -198,6 +202,9 @@ public class CardStackViewModel extends ViewModel {
     }
 
     // CARD EDITOR STUFF //////////////////////////////////////////////////////////////////////////
+    public FlashCard getReviewCard() {
+        return reviewCard;
+    }
     public LiveData<Integer> getCardSelectionChanged() {
         return this.cardSelectionChanged;
     }
@@ -288,10 +295,7 @@ public class CardStackViewModel extends ViewModel {
                 } else {
                     if (getStackType() == FlashcardViewFilter.StackType.QUESTION) {
                         // From plus button on question list
-                        if (getStackType() == FlashcardViewFilter.StackType.QUESTION) {
-                            // From plus button on question list
-                            setStackNewItem();
-                        }
+                        setStackNewItem();
                     }
                     AnswerCard newAnswerCard = new AnswerCard((String) answer, newCard);
                     AnswerCard oldAnswerCard = (AnswerCard) this.flashcardStack.getAnswerCardStack().
@@ -342,43 +346,19 @@ public class CardStackViewModel extends ViewModel {
             FlashcardStack.AddAnswerReturnCode answerAdded = this.flashcardStack.addAnswerToQuestionCard(answer, questionCard);
             switch (answerAdded) {
                 case NEW_ANSWER_LINKED:
-                    switch (getStackType()) {
-                        case QUESTION:
-                            // From question review of its current answers
-                            this.cardNewItem.setValue(questionCard.getAnswers().size() - 1);
-                            break;
-                        case ANSWER:
-                            // From plus button on answer list
-                            setStackNewItem();
-                            break;
-                    }
+                    this.cardNewItem.setValue(questionCard.getAnswers().size() - 1);
+                    setStackNewItem();
                     setAlphaStackChanged(true);
                     return true;
                 case EXISTING_ANSWER_LINKED:
-                    switch (getStackType()) {
-                        case QUESTION:
-                            // From question review of its current answers
-                            this.cardNewItem.setValue(questionCard.getAnswers().size() - 1);
-                            break;
-                        case ANSWER:
-                            // From plus button on answer list
-                            setStackSelectionChanged();
-                            break;
-                    }
+                    this.cardNewItem.setValue(questionCard.getAnswers().size() - 1);
+                    setStackSelectionChanged();
                     setAlphaStackChanged(true);
                     return true;
                 case ANSWER_ALREADY_LINKED:
-                    switch (getStackType()) {
-                        case QUESTION:
-                            // From question review of its current answers
-                            this.cardSelectionChanged.setValue(questionCard.getPosition(answer));
-                            break;
-                        case ANSWER:
-                            // From plus button on answer list
-                            this.flashcardStack.getAnswerCardStack().findCard(answer, false);
-                            setStackSelectionChanged();
-                            break;
-                    }
+                    this.cardSelectionChanged.setValue(questionCard.getPosition(answer));
+                    this.flashcardStack.getAnswerCardStack().findCard(answer, false);
+                    setStackSelectionChanged();
                     return false;
             }
         }
@@ -411,7 +391,7 @@ public class CardStackViewModel extends ViewModel {
         }
     }
 
-    public void deleteAnswerFromQuestionCard(String answer, QuestionCard questionCard) {
+    public void deleteAnswerFromQuestionCard(String answer, QuestionCard questionCard, boolean fromQuestionCardReview) {
         if (nonNull(questionCard)) {
             Integer position = questionCard.getPosition(answer);
             switch (questionCard.deleteAnswer(answer)) {
@@ -420,10 +400,10 @@ public class CardStackViewModel extends ViewModel {
                     break;
                 case SUCCESS:
                     //delete from questionCard successful
-                    if (getStackType() == FlashcardViewFilter.StackType.QUESTION) {
-                            this.cardDeletedItem.setValue(position);
+                    if (fromQuestionCardReview) {
+                        this.cardDeletedItem.setValue(position);
                     }
-                    deleteQuestionFromAnswerCard(answer, questionCard);
+                    deleteQuestionFromAnswerCard(answer, questionCard, fromQuestionCardReview);
                     setAlphaStackChanged(true);
                     break;
                 case NO_EXTRA_ANSWERS:
@@ -450,7 +430,7 @@ public class CardStackViewModel extends ViewModel {
 
     //private because this must only be called from other methods here,
     // which update the question cards and setAlphaStackUpdated and setQuizStackUpdated
-    private void deleteQuestionFromAnswerCard(String answer, QuestionCard questionCard) {
+    private void deleteQuestionFromAnswerCard(String answer, QuestionCard questionCard, boolean fromQuestionCardReview) {
         AnswerCard answerCard = (AnswerCard) this.flashcardStack.getAnswerCardStack().findCard(answer, true);
         Integer position = answerCard.getPosition(questionCard);
 
@@ -459,7 +439,7 @@ public class CardStackViewModel extends ViewModel {
                 case QUESTION_NOT_FOUND:
                     break;
                 case SUCCESS:
-                    if (getStackType() == FlashcardViewFilter.StackType.ANSWER) {
+                    if (!fromQuestionCardReview) { // possibly from answer card review
                         cardDeletedItem.setValue(position);
                     }
                     break;
@@ -497,11 +477,7 @@ public class CardStackViewModel extends ViewModel {
                 }
                 break;
             case ANSWER:
-                position = ((AnswerCard) getSelectionCard()).getPosition(questionCard);
                 if (this.flashcardStack.deleteQuestion(questionCard)) {
-                    if (nonNull(position)) {
-                        this.cardDeletedItem.setValue(position);
-                    }
                     setAlphaStackChanged(true);
                 }
                 break;
@@ -534,8 +510,21 @@ public class CardStackViewModel extends ViewModel {
                     break;
             }
             Integer oldPosition = this.flashcardStack.getFlashcardViewFilter().findItem();
-            Integer newPosition = this.flashcardStack.getFlashcardViewFilter().renameQuestion(oldPosition, oldText, newText, placement);
-            notifyOfModification(FlashcardViewFilter.StackType.QUESTION, oldPosition, newPosition);
+            if (nonNull(oldPosition)) {
+                this.cardChangedItem.setValue(oldPosition);
+                Integer newPosition = this.flashcardStack.getFlashcardViewFilter().renameQuestion(oldPosition, oldText, newText, placement);
+                if (nonNull(newPosition)) {
+                    if (newPosition == oldPosition) {
+                        this.stackChangedItem.setValue(oldPosition);
+                    } else {
+                        this.stackNewPosition = newPosition;
+                        this.stackMovedItem.setValue(oldPosition);
+                    }
+                } else {
+                    // filter mode is on and new text doesn't match filter pattern
+                    this.stackDeletedItem.setValue(oldPosition);
+                }
+            }
             setAlphaStackChanged(true);
             setQuizStackChanged(true);
             if (placement == 0) { // if on top of stack
@@ -551,7 +540,7 @@ public class CardStackViewModel extends ViewModel {
             int oldPosition = questionCard.getPosition(oldText);
             questionCard.deleteAnswer(oldText);
             int newPosition = questionCard.getAnswers().size() - 1;
-            deleteQuestionFromAnswerCard(oldText, questionCard);
+            deleteQuestionFromAnswerCard(oldText, questionCard, false);
             if (answerAdded) {
                 if (newPosition == oldPosition) {
                     this.cardChangedItem.setValue(oldPosition);
@@ -696,14 +685,7 @@ public class CardStackViewModel extends ViewModel {
     }
 
     public void setForceCardReview(FlashCard flashCard) {
-        if (flashCard instanceof AnswerCard) {
-            setStackType(FlashcardViewFilter.StackType.ANSWER);
-        } else {
-            setStackType(FlashcardViewFilter.StackType.QUESTION);
-        }
-        this.flashcardStack.getFlashcardViewFilter().clearFilter();
-        ((AlphabeticalCardTree)getViewStack()).findCard(flashCard.getCardText(), true);
-        this.selectionPosition = getViewStack().getPosition();
+        setReviewCard(flashCard);
         this.forceCardReview.setValue(true);
     }
 
@@ -741,8 +723,8 @@ public class CardStackViewModel extends ViewModel {
     public void clearFilter () {
         this.flashcardStack.getFlashcardViewFilter().clearFilter();
     }
-    public ArrayList<String> getFilterList() {
-        return this.flashcardStack.getFlashcardViewFilter().getFilterList();
+    public boolean getViewFilterComplete() {
+        return this.flashcardStack.getFlashcardViewFilter().getFilterComplete();
     }
 
     public String getPattern() {
@@ -792,49 +774,6 @@ public class CardStackViewModel extends ViewModel {
         if (nonNull(position)) {
             this.stackNewItem.setValue(position);
         } // else in filter mode, but item is either out of range or doesn't match pattern
-    }
-
-    //TODO: perhaps change this to notificationBuilder and add an enum for Notification = ADDED, DELETED, MODIFIED, etc.
-    private void notifyOfModification(FlashcardViewFilter.StackType cardType, int oldPosition, int newPosition) {
-        switch (cardType) {
-            case QUESTION:
-            case QUIZ:
-                switch (getStackType()) {
-                    case QUESTION:
-                    case QUIZ:
-                        if (nonNull(newPosition)) {
-                            if (newPosition == oldPosition) {
-                                this.stackChangedItem.setValue(oldPosition);
-                            } else {
-                                this.stackNewPosition = newPosition;
-                                this.stackMovedItem.setValue(oldPosition); //TODO: does the changed text get seen too, or does notify-change also need to be called?
-                            }
-                        } else {
-                            // filter mode is on and new text doesn't match filter pattern
-                            this.stackDeletedItem.setValue(oldPosition);
-                        }
-                        break;
-                    case ANSWER:
-                        if (nonNull(oldPosition)) {
-                            this.cardChangedItem.setValue(oldPosition);
-                        }
-                        break;
-                }
-            case ANSWER: //TODO: use or remove this
-                switch (getStackType()) {
-                    case QUESTION:
-                        if (nonNull(oldPosition)) {
-                            this.cardChangedItem.setValue(oldPosition);
-                        }
-                        break;
-                    case ANSWER: //TODO: change to position or newPosition
-                        this.stackChangedItem.setValue(getSelectionPosition());
-                        break;
-                    case QUIZ:
-                        // do nothing
-                        break;
-                }
-        }
     }
 
     /**

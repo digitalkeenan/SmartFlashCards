@@ -87,7 +87,8 @@ public class AlphabeticalStackViewFragment extends StackViewFragment {
              * OPTION REVIEW SELECTION
              */
             if (title.equals(getString(R.string.action_review_selection))) {
-                if (nonNull(this.cardStackViewModel.getSelectionCard())) {
+                this.cardStackViewModel.setReviewCard(this.cardStackViewModel.getSelectionCard());
+                if (nonNull(this.cardStackViewModel.getReviewCard())) {
                     NavHostFragment.findNavController(AlphabeticalStackViewFragment.this)
                             .navigate(R.id.action_alphabeticalStackViewFragment_to_cardEditorFragment);
                 }

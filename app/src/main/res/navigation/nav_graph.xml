@@ -55,7 +55,7 @@
     </fragment>
     <fragment
         android:id="@+id/cardEditorFragment"
-        android:name="com.example.smartflashcards.recyclers.cardEditor.CardEditorFragment"
+        android:name="com.example.smartflashcards.recyclers.flashcardReview.FlashcardReviewFragment"
         android:label="@string/card_editor_fragment_label"
         tools:layout="@layout/fragment_card_editor" />
     <fragment
