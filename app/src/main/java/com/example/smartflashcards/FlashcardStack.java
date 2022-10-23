@@ -27,6 +27,8 @@ public class FlashcardStack {
     // viewAnswers selects if selectionCard and viewStack are to be from answerCardStack(T) or questionCardStack(F)
     private FlashcardViewFilter flashcardViewFilter;
 
+    private Integer iterationInteger;
+
     FlashcardStack() {
         this.questionCardStack = new AlphabeticalCardTree();
         this.answerCardStack = new AlphabeticalCardTree();
@@ -47,6 +49,7 @@ public class FlashcardStack {
                 e.printStackTrace();
             }
         }
+        this.questionCardStack.setNextID(nextID);
         int numberOfCards = 0;
         try {
             numberOfCards = alphaInputStream.read();
@@ -137,41 +140,47 @@ public class FlashcardStack {
         return AddAnswerReturnCode.EXISTING_ANSWER_LINKED;
     }
 
-    public Boolean deleteQuestion(QuestionCard questionCard) {
+    public Integer deleteQuestion(QuestionCard questionCard) {
+        // if last/only answer card was deleted (it only had the one question),
+        // returns its view position (if any)
+
         // NOTE: this does not remove the quiz card, because it could take a long time to find it
         //       Instead, when a quiz card comes up and the answer card can't be found, it will be removed then
 
-        if (nonNull(questionCard)) {
-            this.questionCardStack.deleteNode();
+        this.questionCardStack.deleteNode();
 
-            //note: no ConcurrentModificationException here because it's not deleting from itself
-            questionCard.getAnswers().forEach((key, answer) -> {
-                deleteQuestionFromAnswerCard((String) answer, questionCard);
-            });
-            return true;
-        }
-        return false;
+        iterationInteger = null;
+
+        //note: no ConcurrentModificationException here because it's not deleting from itself
+        questionCard.getAnswers().forEach((key, answer) -> {
+            iterationInteger = deleteQuestionFromAnswerCard((String) answer, questionCard);
+        });
+
+        return iterationInteger;
     }
 
     //private because this must only be called from other methods here, which update the question cards and setStackUpdated
-    private int deleteQuestionFromAnswerCard(String answer, QuestionCard questionCard) {
+    private Integer deleteQuestionFromAnswerCard(String answer, QuestionCard questionCard) {
+        // if answer card deleted (only had the one question), returns its view position (if any)
+
         AnswerCard answerCard = (AnswerCard) this.answerCardStack.findCard(answer, true);
 
         if (nonNull(answerCard)) {
             switch (answerCard.deleteQuestion(questionCard)) {
                 case QUESTION_NOT_FOUND:
                     //didn't find the question in answerCard
-                    return 0;
+                    return null;
                 case SUCCESS:
                     //delete from answerCard successful
-                    return 1;
+                    return null;
                 case NO_EXTRA_QUESTIONS:
                     //questionCard is the only question in answerCard
+                    Integer position = getFlashcardViewFilter().findItem();
                     this.answerCardStack.deleteNode();
-                    return 2;
+                    return position;
             }
         }
-        return 0;
+        return null;
     }
 
 

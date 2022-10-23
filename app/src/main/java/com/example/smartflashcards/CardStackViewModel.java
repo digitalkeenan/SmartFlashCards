@@ -464,25 +464,30 @@ public class CardStackViewModel extends ViewModel {
         //           it will be removed then
 
         QuestionCard questionCard = (QuestionCard) this.flashcardStack.getQuestionCardStack().findCard(question, true);
-        Integer position = null;
         switch (getStackType()) {
             case QUESTION:
-                position = this.flashcardStack.getFlashcardViewFilter().findItem();
-                if (this.flashcardStack.deleteQuestion(questionCard)) {
+                if (nonNull(questionCard)) {
+                    Integer position = this.flashcardStack.getFlashcardViewFilter().findItem();
+                    this.flashcardStack.deleteQuestion(questionCard);
                     if (nonNull(position)) {
+                    }
+                    setAlphaStackChanged(true);
+                }
+                break;
+            case ANSWER:
+                if (nonNull(questionCard)) {
+                    Integer position = this.flashcardStack.deleteQuestion(questionCard);
+                    if (nonNull(position)) {
+                        // answerCard also deleted (it only had the one question)
                         this.flashcardStack.getFlashcardViewFilter().deleteItem(position);
                         this.stackDeletedItem.setValue(position);
                     }
                     setAlphaStackChanged(true);
                 }
                 break;
-            case ANSWER:
-                if (this.flashcardStack.deleteQuestion(questionCard)) {
-                    setAlphaStackChanged(true);
-                }
-                break;
             case QUIZ:
-                if (this.flashcardStack.deleteQuestion(questionCard)) {
+                if (nonNull(questionCard)) {
+                    this.flashcardStack.deleteQuestion(questionCard);
                     setAlphaStackChanged(true);
                 }
                 deleteQuizCard(this.selectionPosition);
@@ -560,7 +565,7 @@ public class CardStackViewModel extends ViewModel {
         if (nonNull(newText) && !newText.equals("")) {
             String oldText = answerCard.getCardText();
             answerCard.getQuestions().forEach(questionCard -> {
-                addAnswerToQuestionCard(newText, questionCard);
+                this.flashcardStack.addAnswerToQuestionCard(newText, questionCard);
                 questionCard.deleteAnswer(oldText);
             });
 
@@ -575,11 +580,17 @@ public class CardStackViewModel extends ViewModel {
             Integer newPosition = this.flashcardStack.getFlashcardViewFilter().addItem();
 
             // notify
-            if (oldPosition == newPosition) {
-                this.stackChangedItem.setValue(oldPosition);
+            if (nonNull(newPosition)) {
+                if (oldPosition == newPosition) {
+                    this.stackChangedItem.setValue(oldPosition);
+                } else {
+                    this.stackNewPosition = newPosition;
+                    this.stackMovedItem.setValue(oldPosition);
+                }
             } else {
-                this.stackNewPosition = newPosition;
-                this.stackMovedItem.setValue(oldPosition); //TODO: does the changed text get seen too, or does notify-change also need to be called?
+                // modified answer is not on this list or was already on the list
+                this.stackDeletedItem.setValue(oldPosition);
+                // TODO: if changed to one already on the list, also select that
             }
             setAlphaStackChanged(true);
         }
@@ -736,10 +747,6 @@ public class CardStackViewModel extends ViewModel {
 
     public int getViewSize() {
         return this.flashcardStack.getFlashcardViewFilter().getSize();
-    }
-
-    public Integer getViewCardID(Integer position) {
-        return this.flashcardStack.getFlashcardViewFilter().getID(position);
     }
 
     public CardTreeNode getViewNode(Integer position) {

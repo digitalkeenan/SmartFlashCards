@@ -246,12 +246,20 @@ public class FlashcardViewFilter {
                         while (getStackPosition(index) < stackPosition) {
                             index++;
                         }
+                        if (getStackPosition(index) == stackPosition) {
+                            // the new one already existed, so don't add it
+                            return null;
+                        }
                         this.filterNodes.add(index, node);
                         return index;
                     }
                 } else if (filterComplete) {
                     // if no clickForMore, can add new item to end of list
                     if (item.contains(this.filterPattern)) {
+                        if (getStackPosition(lastPosition) == stackPosition) {
+                            // the new one already existed, so don't add it
+                            return null;
+                        }
                         this.filterNodes.add(node);
                         return lastPosition + 1;
                     }
@@ -321,15 +329,6 @@ public class FlashcardViewFilter {
                 }
                 return getViewStack().getCard().getCardText();
             }
-        }
-        return null;
-    }
-
-    public Integer getID(int position) {
-        FlashCard flashCard = getFlashCard(position);
-        if (nonNull(flashCard)) {
-            Integer currentID = getViewStack().getCurrentNode().getID();
-            return currentID;
         }
         return null;
     }

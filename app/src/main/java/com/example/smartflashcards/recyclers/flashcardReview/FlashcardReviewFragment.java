@@ -29,8 +29,6 @@ public class FlashcardReviewFragment extends RecyclerFragment {
 
     private CardStackViewModel cardStackViewModel;
 
-    private boolean isAnswerCard;
-
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -62,9 +60,9 @@ public class FlashcardReviewFragment extends RecyclerFragment {
             if (title.equals(getString(R.string.action_delete_selection))) {
                 String selectionString = getSelectionString();
                 if (nonNull(selectionString)) {
-                    if (isAnswerCard) {
-                        if (((AnswerCard) this.cardStackViewModel.getSelectionCard()).getNumberQuestions() > 1) {
-                            String answer = this.cardStackViewModel.getSelectionCard().getCardText();
+                    if (this.cardStackViewModel.getReviewCard() instanceof AnswerCard) {
+                        if (((AnswerCard) this.cardStackViewModel.getReviewCard()).getNumberQuestions() > 1) {
+                            String answer = this.cardStackViewModel.getReviewCard().getCardText();
                             QuestionCard questionCard = this.cardStackViewModel.findQuestionCard(selectionString);
                             this.cardStackViewModel.deleteAnswerFromQuestionCard(answer, questionCard, false);
                         } else {
@@ -76,9 +74,9 @@ public class FlashcardReviewFragment extends RecyclerFragment {
                             this.cardStackViewModel.setDialogData(dialogData);
                         }
                     } else {
-                        if (((QuestionCard)this.cardStackViewModel.getSelectionCard()).getAnswers().size() > 1) {
+                        if (((QuestionCard)this.cardStackViewModel.getReviewCard()).getAnswers().size() > 1) {
                             String answer = selectionString;
-                            QuestionCard questionCard = (QuestionCard) this.cardStackViewModel.getSelectionCard();
+                            QuestionCard questionCard = (QuestionCard) this.cardStackViewModel.getReviewCard();
                             this.cardStackViewModel.deleteAnswerFromQuestionCard(answer, questionCard, true);
                         } else {
                             DialogData dialogData = new DialogData(DialogData.Type.CONTINUE, DialogData.Action.noAction);
@@ -95,13 +93,13 @@ public class FlashcardReviewFragment extends RecyclerFragment {
             if (title.equals(getString(R.string.action_edit_selection))) {
                 String selectionString = getSelectionString();
                 if (nonNull(selectionString)) {
-                    if (isAnswerCard) {
+                    if (this.cardStackViewModel.getReviewCard() instanceof AnswerCard) {
                         // if view is answers, the selected item is a question linked from that answer view, and vice versa
                         cardStackViewModel.createModifyQuestionDialog(selectionString);
                     } else {
                         // here the answer will only be changed in the selected QuestionCard
                         cardStackViewModel.createModifyAnswerDialog(selectionString,
-                                (QuestionCard) cardStackViewModel.getSelectionCard());
+                                (QuestionCard) cardStackViewModel.getReviewCard());
                     }
                 };
             }
@@ -117,19 +115,17 @@ public class FlashcardReviewFragment extends RecyclerFragment {
         super.setAdapter(view);
 
         this.cardStackViewModel.clearCardNotifications();
-        this.isAnswerCard = (this.cardStackViewModel.getReviewCard() instanceof AnswerCard);
-
         //set the card text in the editor screen
-        if (nonNull(this.cardStackViewModel.getSelectionCard())) {
+        if (nonNull(this.cardStackViewModel.getReviewCard())) {
             TextView textView = view.findViewById(R.id.header);
             String header = "";
-            if (isAnswerCard) {
+            if (this.cardStackViewModel.getReviewCard() instanceof AnswerCard) {
                 header += this.cardStackViewModel.getStackDetails().getValue().getJeopardyPrefix();
-                header += this.cardStackViewModel.getSelectionCard().getCardText();
+                header += this.cardStackViewModel.getReviewCard().getCardText();
                 header += this.cardStackViewModel.getStackDetails().getValue().getJeopardyPostfix();
             } else {
                 header += this.cardStackViewModel.getStackDetails().getValue().getQuestionPrefix();
-                header += this.cardStackViewModel.getSelectionCard().getCardText();
+                header += this.cardStackViewModel.getReviewCard().getCardText();
                 header += this.cardStackViewModel.getStackDetails().getValue().getQuestionPostfix();
             }
             textView.setText(header);
@@ -147,10 +143,10 @@ public class FlashcardReviewFragment extends RecyclerFragment {
         this.binding.addStringButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (isAnswerCard) {
-                    cardStackViewModel.createNewFlashcardDialog(cardStackViewModel.getSelectionCard());
+                if (cardStackViewModel.getReviewCard() instanceof AnswerCard) {
+                    cardStackViewModel.createNewFlashcardDialog(cardStackViewModel.getReviewCard());
                 } else {
-                    cardStackViewModel.createAddAnswerDialog((QuestionCard) cardStackViewModel.getSelectionCard());
+                    cardStackViewModel.createAddAnswerDialog((QuestionCard) cardStackViewModel.getReviewCard());
                 }
             }
         });
