@@ -261,6 +261,7 @@ public class CardStackViewModel extends ViewModel {
                 if (nonNull(answerCard)) {
                     // From answer review of its current questions - add link to pre-existing question
                     answerCard.addQuestion(questionCard);
+                    questionCard.addAnswer(answer);
                     this.cardNewItem.setValue(answerCard.getNumberQuestions() - 1);
                     setAlphaStackChanged(true);
                 } else {
@@ -408,7 +409,9 @@ public class CardStackViewModel extends ViewModel {
                     break;
                 case NO_EXTRA_ANSWERS:
                     //answer to delete was the only one in questionCard
-                    DialogData dialogData = new DialogData(DialogData.Type.REMOVE_CHANGE_CANCEL, DialogData.Action.deleteOrChangeQuestionCard);
+                    DialogData dialogData = new DialogData(
+                            DialogData.Type.CONTINUE_OR_CANCEL,
+                            DialogData.Action.deleteQuestionFromAnswerCardReview);
                     dialogData.setFlashCard(questionCard);
                     dialogData.setDataString(answer);
 
@@ -416,16 +419,25 @@ public class CardStackViewModel extends ViewModel {
                     message += " [" + questionCard.getCardText() + "]";
                     message += "\nhas only one " + getStackDetails().getValue().getAnswerLabel();
                     message += " [" + answer + "]";
-                    message += "\n\nOptions:";
-                    message += "\n- REMOVE the entire " + getStackDetails().getValue().getQuestionLabel();
-                    message += "\n- CHANGE the " + getStackDetails().getValue().getAnswerLabel();
-                    message += "\n- CANCEL and keep this " + getStackDetails().getValue().getAnswerLabel();
+                    message += "\n\nClick CONTINUE to remove the entire " + getStackDetails().getValue().getQuestionLabel();
                     dialogData.setMessage(message);
 
                     setDialogData(dialogData);
                     break;
             }
         }
+    }
+
+    public void deleteQuestionFromAnswerCardReview(String question, String answer) {
+        // for confirmed delete from above dialog command
+
+        // sets currentNode in questionCardStack
+        QuestionCard questionCard = (QuestionCard) this.flashcardStack.getQuestionCardStack().findCard(question, true);
+
+        Integer position = questionCard.getPosition(answer);
+        this.flashcardStack.deleteQuestion(questionCard);
+        this.cardDeletedItem.setValue(position);
+        setAlphaStackChanged(true);
     }
 
     //private because this must only be called from other methods here,
@@ -440,14 +452,18 @@ public class CardStackViewModel extends ViewModel {
                     break;
                 case SUCCESS:
                     if (!fromQuestionCardReview) { // possibly from answer card review
-                        cardDeletedItem.setValue(position);
+                        this.cardDeletedItem.setValue(position);
                     }
                     break;
                 case NO_EXTRA_QUESTIONS:
-                    position = this.flashcardStack.getAnswerCardStack().getPosition();
-                    this.flashcardStack.getAnswerCardStack().deleteNode();
+                    // delete the answer card
                     if (getStackType() == FlashcardViewFilter.StackType.ANSWER) {
-                        stackDeletedItem.setValue(position);
+                        position = this.flashcardStack.getFlashcardViewFilter().findItem();
+                        this.flashcardStack.getFlashcardViewFilter().deleteItem(position);
+                        this.flashcardStack.getAnswerCardStack().deleteNode();
+                        this.stackDeletedItem.setValue(position);
+                    } else {
+                        this.flashcardStack.getAnswerCardStack().deleteNode();
                     }
                     break;
             }

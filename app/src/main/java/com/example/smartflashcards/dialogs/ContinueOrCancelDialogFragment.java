@@ -13,7 +13,6 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.smartflashcards.CardStackViewModel;
 import com.example.smartflashcards.cards.QuestionCard;
 import com.example.smartflashcards.R;
-import com.example.smartflashcards.stackDetails.StackDetailsViewModel;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -52,6 +51,12 @@ public class ContinueOrCancelDialogFragment extends DialogStackFragment {
                                 break;
                             case deleteQuestion:
                                 cardStackViewModel.deleteQuestion(dialogData.getDataString());
+                                break;
+                            case deleteQuestionFromAnswerCardReview:
+                                cardStackViewModel.deleteQuestionFromAnswerCardReview(
+                                        dialogData.getFlashCard().getCardText(), // question
+                                        dialogData.getDataString() //answer
+                                );
                                 break;
                             case deleteStack:
                                 File directory = new File(getActivity().getFilesDir(), getString(R.string.stack_directory));

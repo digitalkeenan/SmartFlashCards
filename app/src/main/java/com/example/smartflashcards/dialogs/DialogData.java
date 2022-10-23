@@ -33,7 +33,7 @@ public class DialogData {
         addQuestionCard,
         addStack,
         deleteAnswerFromQuestionCard,
-        deleteOrChangeQuestionCard,
+        deleteQuestionFromAnswerCardReview,
         deleteQuestion,
         deleteStack,
         modifyAnswerCardAll,

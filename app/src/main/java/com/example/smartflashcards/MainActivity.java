@@ -21,7 +21,6 @@ import com.example.smartflashcards.dialogs.DialogStackFragment;
 import com.example.smartflashcards.dialogs.DialogViewModel;
 import com.example.smartflashcards.dialogs.NewStackDialogFragment;
 import com.example.smartflashcards.dialogs.ProposeCardReviewDialogFragment;
-import com.example.smartflashcards.dialogs.RemoveChangeCancelDialogFragment;
 import com.example.smartflashcards.keenanClasses.MyFileInputStream;
 import com.example.smartflashcards.keenanClasses.MyFileOutputStream;
 import com.example.smartflashcards.stackDetails.StackDetails;
@@ -33,7 +32,6 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -186,9 +184,6 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case RECOMMEND_REVIEW:
                         dialogFragment = new ProposeCardReviewDialogFragment();
-                        break;
-                    case REMOVE_CHANGE_CANCEL:
-                        dialogFragment = new RemoveChangeCancelDialogFragment();
                         break;
                 }
                 if (nonNull(dialogFragment)) {

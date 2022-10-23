@@ -41,9 +41,6 @@ public class ProposeCardReviewDialogFragment extends DialogStackFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
                         cardStackViewModel.setForceCardReview(dialogData.getFlashCard());
-                        //TODO: add a way back to prior view
-                        // and maybe keep track of prior view's selection card
-                        // OR maybe keep a separate selectionCard and view variable for card-review
                     }
                 })
                 .setNegativeButton(R.string.continueButton, new DialogInterface.OnClickListener() {
