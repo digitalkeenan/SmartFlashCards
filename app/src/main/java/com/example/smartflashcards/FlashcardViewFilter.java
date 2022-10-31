@@ -143,7 +143,10 @@ public class FlashcardViewFilter {
             getViewStack().findNextContains(this.filterPattern);
             CardTreeNode currentNode = getViewStack().getCurrentNode();
             if (stackType == StackType.QUIZ) {
-                while (nonNull(currentNode) && !this.flashcardStack.quizCardValidate(true)) {
+                while (nonNull(currentNode) && !this.flashcardStack.quizCardValidate(false)) {
+                    getViewStack().deleteNode();
+                    getViewStack().setCurrentNode(this.filterNodes.get(lastPosition));
+                    getViewStack().nextSequential();
                     getViewStack().findNextContains(this.filterPattern);
                     currentNode = getViewStack().getCurrentNode();
                 }
@@ -205,15 +208,18 @@ public class FlashcardViewFilter {
     }
 
     public Integer findItem() { // before calling this, make sure currentCard is set to the target
-        int position = getViewStack().getPosition();
-        if (getFilterMode()) {
-            // capture string before currentNode can change //TODO: does this go away when no longer storing strings here?
+        Integer position = getViewStack().getPosition();
+        if (nonNull(position) && getFilterMode()) {
+            // capture string before currentNode can change
             String item = getViewStack().getCard(position).getCardText();
             int lastPosition = this.filterNodes.size() - 1;
             if (position <= getStackPosition(lastPosition)) {
                 // position is within bounds of current list
                 if (item.contains(this.filterPattern)) {
                     int index = 0;
+                    // TODO: consider changing this loop
+                    //  - if leaving as linear search, it may be more efficient to just check for matching node
+                    //  - could change to a binary search by checking middle item's stack position first, etc.
                     while (getStackPosition(index) < position) {
                         index++;
                     }
@@ -228,44 +234,46 @@ public class FlashcardViewFilter {
 
     public Integer addItem() { // before calling this, make sure currentCard is set to the new one
         // returns position of new item
-        int stackPosition = getViewStack().getPosition();
-        String item = getViewStack().getCard(stackPosition).getCardText();
-        CardTreeNode node = getViewStack().getCurrentNode();
-        if (getFilterMode()) {
-            int lastPosition = this.filterNodes.size() - 1;
-            if (lastPosition < 0) {
-                if (item.contains(this.filterPattern)) {
-                    this.filterNodes.add(node);
-                    return 0;
-                }
-            } else {
-                if (stackPosition < getStackPosition(lastPosition)) {
-                    // position is within bounds of current list
+        Integer stackPosition = getViewStack().getPosition();
+        if (nonNull(stackPosition)) {
+            String item = getViewStack().getCard(stackPosition).getCardText();
+            CardTreeNode node = getViewStack().getCurrentNode();
+            if (getFilterMode()) {
+                int lastPosition = this.filterNodes.size() - 1;
+                if (lastPosition < 0) {
                     if (item.contains(this.filterPattern)) {
-                        int index = 0;
-                        while (getStackPosition(index) < stackPosition) {
-                            index++;
-                        }
-                        if (getStackPosition(index) == stackPosition) {
-                            // the new one already existed, so don't add it
-                            return null;
-                        }
-                        this.filterNodes.add(index, node);
-                        return index;
-                    }
-                } else if (filterComplete) {
-                    // if no clickForMore, can add new item to end of list
-                    if (item.contains(this.filterPattern)) {
-                        if (getStackPosition(lastPosition) == stackPosition) {
-                            // the new one already existed, so don't add it
-                            return null;
-                        }
                         this.filterNodes.add(node);
-                        return lastPosition + 1;
+                        return 0;
+                    }
+                } else {
+                    if (stackPosition < getStackPosition(lastPosition)) {
+                        // position is within bounds of current list
+                        if (item.contains(this.filterPattern)) {
+                            int index = 0;
+                            while (getStackPosition(index) < stackPosition) {
+                                index++;
+                            }
+                            if (getStackPosition(index) == stackPosition) {
+                                // the new one already existed, so don't add it
+                                return null;
+                            }
+                            this.filterNodes.add(index, node);
+                            return index;
+                        }
+                    } else if (filterComplete) {
+                        // if no clickForMore, can add new item to end of list
+                        if (item.contains(this.filterPattern)) {
+                            if (getStackPosition(lastPosition) == stackPosition) {
+                                // the new one already existed, so don't add it
+                                return null;
+                            }
+                            this.filterNodes.add(node);
+                            return lastPosition + 1;
+                        }
                     }
                 }
+                return null; // item either out of range or doesn't match pattern
             }
-            return null; // item either out of range or doesn't match pattern
         }
         // if not in filter mode, just return the currentCard position
         return stackPosition;
@@ -279,6 +287,17 @@ public class FlashcardViewFilter {
     private void removeItem(int position) {
         // position must be int instead of Integer to call remove(int) instead of remove(object)
         this.filterNodes.remove((int) position);
+    }
+
+    public void deleteViewCard(Integer position) {
+        if (nonNull(position)) {
+            if (getFilterMode()) {
+                getViewStack().setCurrentNode(this.filterNodes.get(position));
+            } else {
+                getViewStack().getCard(position);
+            }
+            getViewStack().deleteNode();
+        }
     }
 
     public Integer renameQuestion(int oldPosition, String oldText, String newText, int placement) {

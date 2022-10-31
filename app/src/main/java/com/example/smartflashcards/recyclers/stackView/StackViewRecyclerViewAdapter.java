@@ -1,7 +1,5 @@
 package com.example.smartflashcards.recyclers.stackView;
 
-import static java.util.Objects.nonNull;
-
 import com.example.smartflashcards.CardStackViewModel;
 import com.example.smartflashcards.cardTrees.CardTreeNode;
 import com.example.smartflashcards.recyclers.recycler.RecyclerViewAdapter;

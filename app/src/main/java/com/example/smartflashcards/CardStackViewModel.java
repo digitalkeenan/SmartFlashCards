@@ -471,8 +471,7 @@ public class CardStackViewModel extends ViewModel {
     }
 
     public void deleteQuestion(String question) {
-        // This deletes without further prompts - for "are you sure" dialog, call deleteQuestion(String question),
-        // which will call an are-you-sure dialog, which will then call this method
+        // Delete selection from list of question cards or list of quiz cards
 
         //NOTE: If not in quiz mode, this does not remove the quiz card,
         //           because it could take a long time to find it
@@ -480,7 +479,17 @@ public class CardStackViewModel extends ViewModel {
         //           it will be removed then
 
         QuestionCard questionCard = (QuestionCard) this.flashcardStack.getQuestionCardStack().findCard(question, true);
-        switch (getStackType()) {
+        if (nonNull(questionCard)) {
+            this.flashcardStack.deleteQuestion(questionCard);
+            setAlphaStackChanged(true);
+            if (getStackType() == FlashcardViewFilter.StackType.QUIZ) {
+                this.flashcardStack.getFlashcardViewFilter().deleteViewCard(getSelectionPosition());
+                setQuizStackChanged(true);
+            }
+            this.flashcardStack.getFlashcardViewFilter().deleteItem(getSelectionPosition());
+            this.stackDeletedItem.setValue(getSelectionPosition());
+        }
+        /*switch (getStackType()) {
             case QUESTION:
                 if (nonNull(questionCard)) {
                     Integer position = this.flashcardStack.getFlashcardViewFilter().findItem();
@@ -508,7 +517,7 @@ public class CardStackViewModel extends ViewModel {
                 }
                 deleteQuizCard(this.selectionPosition);
                 break;
-        }
+        }*/
     }
 
     public QuestionCard findQuestionCard(String question) {
@@ -661,6 +670,8 @@ public class CardStackViewModel extends ViewModel {
         return finalPlacement;
     }
 
+    //TODO: could change this to take the node as the input instead
+    // - do nothing if node is no longer in the tree (because bad nodes get put in the stack multiple times)
     public void deleteQuizCard(int stackPosition) {
         this.flashcardStack.getQuizStack().getCard(stackPosition);
         Integer position = this.flashcardStack.getFlashcardViewFilter().findItem();
