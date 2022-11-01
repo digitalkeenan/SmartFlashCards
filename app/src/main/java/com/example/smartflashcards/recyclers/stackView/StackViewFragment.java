@@ -151,7 +151,7 @@ public class StackViewFragment extends RecyclerFragment {
         this.cardStackViewModel.getStackDeletedItem().observe(getViewLifecycleOwner(), position -> {
             if (nonNull(position)) {
                 // Only adjust selection if the deleted item is the selected one
-                // - this prevents selection updates during clean-up of invalid quizCards
+                // - to prevent selection updates during clean-up of invalid quizCards
                 notifyItemRemoved(position, (this.cardStackViewModel.getSelectionPosition().equals(position)));
             }
         });

@@ -71,7 +71,7 @@ public class CardStackViewModel extends ViewModel {
     // Quiz Card is always the top-of-queue card
     private final MutableLiveData<QuizCard> quizMeCard = new MutableLiveData<>();
     private Stack<CardTreeNode> invalidQuizNodeStack = new Stack<>();
-    private final MutableLiveData<Integer> invalidQuizCardPosition = new MutableLiveData<>();
+    private final MutableLiveData<CardTreeNode> topOfInvalidQuizNodeStack = new MutableLiveData<>();
 
     // DIALOG STUFF ///////////////////////////////////////////////////////////////////////////////
     // dialog communication: signal dialog results back to fragments
@@ -228,8 +228,8 @@ public class CardStackViewModel extends ViewModel {
     public LiveData<QuizCard> getQuizMeCard() {
         return this.quizMeCard;
     }
-    public LiveData<Integer> getInvalidQuizCardPosition() {
-        return this.invalidQuizCardPosition;
+    public LiveData<CardTreeNode> getTopOfInvalidQuizNodeStack() {
+        return this.topOfInvalidQuizNodeStack;
     }
 
     // DIALOG STUFF ///////////////////////////////////////////////////////////////////////////////
@@ -272,7 +272,7 @@ public class CardStackViewModel extends ViewModel {
                     }
                     // attempt to add new answer
                     if (addAnswerToQuestionCard(answer, questionCard)) {
-                        //successful
+                        // successful
                         DialogData dialogData = new DialogData(DialogData.Type.RECOMMEND_REVIEW, DialogData.Action.setForceCardReview);
                         String message = "Your " + getStackDetails().getValue().getAnswerLabel();
                         message += " was added as an additional valid response for that pre-existing ";
@@ -302,7 +302,7 @@ public class CardStackViewModel extends ViewModel {
                     AnswerCard oldAnswerCard = (AnswerCard) this.flashcardStack.getAnswerCardStack().
                             addNode(newAnswerCard, null, false);
                     if (nonNull(oldAnswerCard)) {
-                        //nonNull here means that above add was unsuccessful due to pre-existing answer
+                        // nonNull here means that above add was unsuccessful due to pre-existing answer
                         oldAnswerCard.addQuestion(newCard);
                         if (getStackType() == FlashcardViewFilter.StackType.ANSWER) {
                             setStackSelectionChanged();
@@ -341,8 +341,8 @@ public class CardStackViewModel extends ViewModel {
     }
 
     public Boolean addAnswerToQuestionCard(String answer, QuestionCard questionCard) {
-        //returns true if successful
-        //returns false if answer id blank or already exists in this questionCard
+        // returns true if successful
+        // returns false if answer id blank or already exists in this questionCard
         if (nonNull(answer) && !answer.equals("")) {
             FlashcardStack.AddAnswerReturnCode answerAdded = this.flashcardStack.addAnswerToQuestionCard(answer, questionCard);
             switch (answerAdded) {
@@ -367,11 +367,11 @@ public class CardStackViewModel extends ViewModel {
     }
 
     public void deleteAnswer(String answer) {
-        //run deleteAnswerFromQuestionCard on each question found in the AnswerCard for answer
+        // run deleteAnswerFromQuestionCard on each question found in the AnswerCard for answer
         AnswerCard answerCard = (AnswerCard) this.flashcardStack.getAnswerCardStack().findCard(answer, true);
 
         if (nonNull(answerCard)) {
-            //Avoid ConcurrentModificationException by first copying the list
+            // Avoid ConcurrentModificationException by first copying the list
             ArrayList<QuestionCard> questionCardArrayList = new ArrayList<QuestionCard>(1);
             answerCard.getQuestions().forEach(questionCard -> {
                 questionCardArrayList.add(questionCard);
@@ -440,7 +440,7 @@ public class CardStackViewModel extends ViewModel {
         setAlphaStackChanged(true);
     }
 
-    //private because this must only be called from other methods here,
+    // private because this must only be called from other methods here,
     // which update the question cards and setAlphaStackUpdated and setQuizStackUpdated
     private void deleteQuestionFromAnswerCard(String answer, QuestionCard questionCard, boolean fromQuestionCardReview) {
         AnswerCard answerCard = (AnswerCard) this.flashcardStack.getAnswerCardStack().findCard(answer, true);
@@ -489,35 +489,6 @@ public class CardStackViewModel extends ViewModel {
             this.flashcardStack.getFlashcardViewFilter().deleteItem(getSelectionPosition());
             this.stackDeletedItem.setValue(getSelectionPosition());
         }
-        /*switch (getStackType()) {
-            case QUESTION:
-                if (nonNull(questionCard)) {
-                    Integer position = this.flashcardStack.getFlashcardViewFilter().findItem();
-                    this.flashcardStack.deleteQuestion(questionCard);
-                    if (nonNull(position)) {
-                    }
-                    setAlphaStackChanged(true);
-                }
-                break;
-            case ANSWER:
-                if (nonNull(questionCard)) {
-                    Integer position = this.flashcardStack.deleteQuestion(questionCard);
-                    if (nonNull(position)) {
-                        // answerCard also deleted (it only had the one question)
-                        this.flashcardStack.getFlashcardViewFilter().deleteItem(position);
-                        this.stackDeletedItem.setValue(position);
-                    }
-                    setAlphaStackChanged(true);
-                }
-                break;
-            case QUIZ:
-                if (nonNull(questionCard)) {
-                    this.flashcardStack.deleteQuestion(questionCard);
-                    setAlphaStackChanged(true);
-                }
-                deleteQuizCard(this.selectionPosition);
-                break;
-        }*/
     }
 
     public QuestionCard findQuestionCard(String question) {
@@ -531,14 +502,8 @@ public class CardStackViewModel extends ViewModel {
             setDialogData(dialogData);
         } else {
             // set currentNode in questionCardStack or quizCardStack
-            switch (this.flashcardStack.getFlashcardViewFilter().getStackType()) {
-                case QUESTION:
-                    this.flashcardStack.getQuestionCardStack().findCard(oldText, true);
-                    break;
-                case QUIZ:
-                    this.flashcardStack.getQuizStack().getCard(getSelectionPosition());
-                    break;
-            }
+            this.flashcardStack.getFlashcardViewFilter().moveToPosition(getSelectionPosition());
+
             Integer oldPosition = this.flashcardStack.getFlashcardViewFilter().findItem();
             if (nonNull(oldPosition)) {
                 this.cardChangedItem.setValue(oldPosition);
@@ -670,16 +635,16 @@ public class CardStackViewModel extends ViewModel {
         return finalPlacement;
     }
 
-    //TODO: could change this to take the node as the input instead
-    // - do nothing if node is no longer in the tree (because bad nodes get put in the stack multiple times)
-    public void deleteQuizCard(int stackPosition) {
-        this.flashcardStack.getQuizStack().getCard(stackPosition);
-        Integer position = this.flashcardStack.getFlashcardViewFilter().findItem();
-        this.flashcardStack.getQuizStack().deleteNode();
-        setQuizStackChanged(true);
-        if (nonNull(position)) {
-            this.flashcardStack.getFlashcardViewFilter().deleteItem(position);
-            this.stackDeletedItem.setValue(position);
+    public void deleteQuizCard(CardTreeNode invalidNode) {
+        // an invalid node will get queued for deletion multiple times, so ignore if already deleted
+        if (this.flashcardStack.getQuizStack().setCurrentNode(invalidNode)) {
+            Integer position = this.flashcardStack.getFlashcardViewFilter().findItem();
+            this.flashcardStack.getQuizStack().deleteNode();
+            setQuizStackChanged(true);
+            if (nonNull(position)) {
+                this.flashcardStack.getFlashcardViewFilter().deleteItem(position);
+                this.stackDeletedItem.setValue(position);
+            }
         }
     }
 
@@ -687,7 +652,7 @@ public class CardStackViewModel extends ViewModel {
         invalidQuizCards.forEach(quizNode -> {
             this.invalidQuizNodeStack.push(quizNode);
         });
-        if (!nonNull(this.invalidQuizCardPosition.getValue())) {
+        if (!nonNull(this.topOfInvalidQuizNodeStack.getValue())) {
             popInvalidQuizCardStack();
         }
     }
@@ -697,18 +662,12 @@ public class CardStackViewModel extends ViewModel {
     }
 
     public void popInvalidQuizCardStack() {
-        while (!this.invalidQuizNodeStack.empty()) {
+        if (this.invalidQuizNodeStack.empty()) {
+            this.topOfInvalidQuizNodeStack.setValue(null);
+        } else {
             CardTreeNode invalidNode = this.invalidQuizNodeStack.pop();
-            this.flashcardStack.getQuizStack().setCurrentNode(invalidNode);
-            Integer position = this.flashcardStack.getQuizStack().getPosition();
-            if (nonNull(position)) {
-                this.invalidQuizCardPosition.setValue(position);
-                return;
-            }
-            // Else position is null because the node was put in the invalid stack multiple times
-            // so pop again until a new one is found or the stack is empty
+            this.topOfInvalidQuizNodeStack.setValue(invalidNode);
         }
-        this.invalidQuizCardPosition.setValue(null);
     }
 
     /**

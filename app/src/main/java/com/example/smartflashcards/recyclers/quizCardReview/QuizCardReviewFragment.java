@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.smartflashcards.CardStackViewModel;
+import com.example.smartflashcards.FlashcardViewFilter;
 import com.example.smartflashcards.R;
 import com.example.smartflashcards.cards.QuestionCard;
 import com.example.smartflashcards.cards.QuizCard;

@@ -109,7 +109,6 @@ public class QuizMeFragment extends Fragment {
         View view = this.binding.getRoot();
 
         this.cardStackViewModel = new ViewModelProvider(requireActivity()).get(CardStackViewModel.class);
-        this.cardStackViewModel.setStackType(FlashcardViewFilter.StackType.QUIZ);
 
         return view;
     }

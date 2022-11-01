@@ -13,7 +13,9 @@ import android.widget.ToggleButton;
 import androidx.annotation.NonNull;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.example.smartflashcards.FlashcardViewFilter;
 import com.example.smartflashcards.R;
+import com.example.smartflashcards.cardTrees.CardTreeNode;
 
 public class QuizStackViewFragment extends StackViewFragment {
 
@@ -28,6 +30,8 @@ public class QuizStackViewFragment extends StackViewFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        super.cardStackViewModel.setStackType(FlashcardViewFilter.StackType.QUIZ);
+
         setHasOptionsMenu(true);
     }
 
@@ -36,7 +40,6 @@ public class QuizStackViewFragment extends StackViewFragment {
         MenuItem deleteSelection = menu.add(R.string.action_delete_selection);
         MenuItem editSelection = menu.add(R.string.action_edit_selection);
         MenuItem reviewSelection = menu.add(R.string.action_review_selection);
-        //TODO: add moveSelection
         MenuItem randomize = menu.add(R.string.action_randomize);
         super.onCreateOptionsMenu(menu, inflater);
     }
@@ -94,8 +97,8 @@ public class QuizStackViewFragment extends StackViewFragment {
         super.onViewCreated(view, savedInstanceState);
 
         /**
-         * HIDE VIEW SWITCH TODO: perhaps use different layout w/o this & add column w/ position #
-         */
+             * HIDE VIEW SWITCH TODO: perhaps use different layout w/o this & add column w/ position #
+             */
         ToggleButton toggleButton = view.findViewById(R.id.toggleButton);
         toggleButton.setVisibility(View.INVISIBLE);
         TextView switchPrompt = view.findViewById(R.id.switchPromptTextView);
@@ -116,12 +119,12 @@ public class QuizStackViewFragment extends StackViewFragment {
         /**
          * OBSERVE INVALID QUIZ CARDS
          */
-        super.cardStackViewModel.getInvalidQuizCardPosition().observe(getViewLifecycleOwner(), position -> {
-            if (nonNull(position)) {
+        super.cardStackViewModel.getTopOfInvalidQuizNodeStack().observe(getViewLifecycleOwner(), invalidNode -> {
+            if (nonNull(invalidNode)) {
                 recyclerView.post(new Runnable() {
                     @Override
                     public void run() {
-                        callDeleteQuizCard(position);
+                        callDeleteQuizCard(invalidNode);
                     }
                 });
             }
@@ -129,15 +132,15 @@ public class QuizStackViewFragment extends StackViewFragment {
     }
 
     // Wait for initial selection or prior delete to complete
-    private void callDeleteQuizCard(Integer position) {
+    private void callDeleteQuizCard(CardTreeNode invalidNode) {
         recyclerView.post(new Runnable() {
             @Override
             public void run() {
-                deleteQuizCard(position);
+                deleteQuizCard(invalidNode);
             }
         });
     }
-    private void deleteQuizCard(Integer position) {
+    private void deleteQuizCard(CardTreeNode invalidNode) {
         recyclerView.post(new Runnable() {
             @Override
             public void run() {
@@ -145,7 +148,7 @@ public class QuizStackViewFragment extends StackViewFragment {
                          if selection position could change. However, passing through
                          quizMeFragment to get to this one ensures that the first card
                          is valid, and selection is set there before this clean-up */
-                cardStackViewModel.deleteQuizCard(position);
+                cardStackViewModel.deleteQuizCard(invalidNode);
                 recyclerView.post(new Runnable() {
                     @Override
                     public void run() {

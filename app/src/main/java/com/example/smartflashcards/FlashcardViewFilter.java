@@ -170,7 +170,7 @@ public class FlashcardViewFilter {
         return false;
     }
 
-    private boolean moveToPosition(int position) {
+    public boolean moveToPosition(int position) {
         if (getFilterMode()) {
             if (position < this.filterNodes.size()) {
                 getViewStack().setCurrentNode(this.filterNodes.get(position));
@@ -382,10 +382,9 @@ public class FlashcardViewFilter {
         return getViewStack().getPosition();
     }
 
-    // TODO: review usages of this to see if they should just pass in the node
     public Integer getStackPosition(Integer viewPosition) {
         if (nonNull(viewPosition) && getFilterMode()) {
-            if (this.filterNodes.size() > viewPosition) {
+            if (viewPosition < this.filterNodes.size()) {
                 getViewStack().setCurrentNode(this.filterNodes.get(viewPosition));
                 return getViewStack().getPosition();
             }

@@ -25,13 +25,15 @@ public class BinaryTree {
     /**
      * SETTERS
      */
-    public void setCurrentNode(TreeNode node) {
+    public boolean setCurrentNode(TreeNode node) {
         if (nodeIsInTree(node)) {
             this.currentNode = node;
-        } else {
-            this.currentNode = null;
+            getCurrentParent(); // keeping related variables up-to-date
+            return true;
         }
-        getCurrentParent(); // keeping related variables up-to-date
+        this.currentNode = null;
+        this.parentNode = null;
+        return false;
     }
 
     public void setNextID(int nextID) {
