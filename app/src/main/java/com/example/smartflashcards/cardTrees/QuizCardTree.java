@@ -37,23 +37,19 @@ public class QuizCardTree extends BinaryCardTree {
 
             if (numCards > 0) {
                 int idNumber = 0;
-                if (!version.equals("0")) {
-                    try {
-                        idNumber = inputStream.read();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                try {
+                    idNumber = inputStream.read();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
                 card = new QuizCard(inputStream);
                 addNode(card, idNumber);
 
                 for (int cardIndex = 1; cardIndex < numCards; cardIndex++) {
-                    if (!version.equals("0")) {
-                        try {
-                            idNumber = inputStream.read();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                    try {
+                        idNumber = inputStream.read();
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                     card = new QuizCard(inputStream);
                     addToEnd(card, idNumber); //requires a non-empty tree with currentNode set to last node

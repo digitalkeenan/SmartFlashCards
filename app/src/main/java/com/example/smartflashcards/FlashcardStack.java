@@ -9,6 +9,7 @@ import com.example.smartflashcards.cards.AnswerCard;
 import com.example.smartflashcards.cards.QuestionCard;
 import com.example.smartflashcards.cards.QuizCard;
 import com.example.smartflashcards.keenanClasses.MyFileInputStream;
+import com.example.smartflashcards.stackDetails.StackDetails;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,25 +30,23 @@ public class FlashcardStack {
 
     private Integer iterationInteger;
 
-    FlashcardStack() {
-        this.questionCardStack = new AlphabeticalCardTree();
-        this.answerCardStack = new AlphabeticalCardTree();
+    FlashcardStack(StackDetails stackDetails) {
+        this.questionCardStack = new AlphabeticalCardTree(stackDetails.getQuestionLocale());
+        this.answerCardStack = new AlphabeticalCardTree(stackDetails.getAnswerLocale());
         this.quizStack = new QuizCardTree();
         this.invalidQuizNodeList = new ArrayList<>();
         this.flashcardViewFilter = new FlashcardViewFilter(this);
     }
 
-    FlashcardStack(String version, MyFileInputStream alphaInputStream, MyFileInputStream quizInputStream) {
-        this();
+    FlashcardStack(String version, StackDetails stackDetails, MyFileInputStream alphaInputStream, MyFileInputStream quizInputStream) {
+        this(stackDetails);
 
         // load question and answer stacks
         int nextID = 0;
-        if (!version.equals("0")) {
-            try {
-                nextID = alphaInputStream.read();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        try {
+            nextID = alphaInputStream.read();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         this.questionCardStack.setNextID(nextID);
         int numberOfCards = 0;
@@ -58,12 +57,10 @@ public class FlashcardStack {
         }
         for (int cardIndex=0; cardIndex < numberOfCards; cardIndex++) {
             Integer idNumber = null;
-            if (!version.equals("0")) {
-                try {
-                    idNumber = alphaInputStream.read();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            try {
+                idNumber = alphaInputStream.read();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
             QuestionCard questionCard = new QuestionCard(alphaInputStream);
 
@@ -109,6 +106,11 @@ public class FlashcardStack {
     /**
      * ALPHABETIC STACK FUNCTIONS
      */
+
+    public void updateStackDetails(StackDetails stackDetails) {
+        this.questionCardStack.setLocale(stackDetails.getQuestionLocale());
+        this.answerCardStack.setLocale(stackDetails.getAnswerLocale());
+    }
 
     //private because this must only be called from other methods here, which update the question cards and setStackUpdated
     private Boolean newAnswer(String answer, QuestionCard questionCard) {

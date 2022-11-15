@@ -101,6 +101,7 @@ public class CardStackViewModel extends ViewModel {
     }
     public void setStackDetails (StackDetails stackDetails) {
         this.stackDetails.setValue(stackDetails);
+        this.flashcardStack.updateStackDetails(stackDetails);
     }
     public void newStackDetails (Context context) {
         this.stackDetails.setValue(new StackDetails(context));
@@ -108,11 +109,12 @@ public class CardStackViewModel extends ViewModel {
     public void loadStackDetails (MyFileInputStream inputStream) {
         this.stackDetails.setValue(new StackDetails(inputStream));
     }
-    public void newFlashcardStack() { // TODO: combine newQuizStack into this and rename
-        this.flashcardStack = new FlashcardStack();
+    public void newFlashcardStack() {
+        this.flashcardStack = new FlashcardStack(getStackDetails().getValue());
     }
     public void loadFlashcardStack(String version, MyFileInputStream alphaInputStream, MyFileInputStream quizInputStream) {
-        this.flashcardStack = new FlashcardStack(version, alphaInputStream, quizInputStream);
+        setSelectionPosition(0); // for case where the following load switches the stackType
+        this.flashcardStack = new FlashcardStack(version, getStackDetails().getValue(), alphaInputStream, quizInputStream);
     }
     public void setAlphaStackChanged(Boolean updated) {
         this.alphaStackChanged.setValue(updated);

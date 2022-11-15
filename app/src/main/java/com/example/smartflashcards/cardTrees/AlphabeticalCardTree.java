@@ -2,10 +2,8 @@ package com.example.smartflashcards.cardTrees;
 
 import static java.util.Objects.nonNull;
 
-import android.icu.text.Collator;
-import android.icu.text.RuleBasedCollator;
-
 import com.example.smartflashcards.cards.FlashCard;
+import com.example.smartflashcards.keenanClasses.MyCollator;
 import com.example.smartflashcards.keenanClasses.MyFileOutputStream;
 import com.example.smartflashcards.keenanClasses.TreeNode;
 
@@ -14,8 +12,15 @@ import java.util.Locale;
 
 public class AlphabeticalCardTree extends BinaryCardTree {
 
-    public AlphabeticalCardTree() {
+    private MyCollator collator;
+
+    public AlphabeticalCardTree(Locale locale) {
         super();
+        this.collator = new MyCollator(locale);
+    }
+
+    public void setLocale(Locale locale) {
+        this.collator = new MyCollator(locale);
     }
 
     public void writeFile(MyFileOutputStream outputStream) {
@@ -67,23 +72,8 @@ public class AlphabeticalCardTree extends BinaryCardTree {
             return null;
         }
 
-        /*Collator esCollator = Collator.getInstance(new Locale("es"));
-        String spanishRules = ((RuleBasedCollator) esCollator).getRules();
-        String traditionalRules = "& C < ch, cH, Ch, CH & L < ll, lL, Ll, LL & R < rr, rR, Rr, RR";
-        RuleBasedCollator collator = null;
-        try {
-            collator = new RuleBasedCollator(spanishRules + traditionalRules);
-        } catch (Exception e) {
-            e.printStackTrace();
-            collator = (RuleBasedCollator) esCollator;
-        }*/ //TODO: create new collator class to handle above and be sure to use it everywhere strings are compared
-            // (e.g. starts-with must follow same alphabetization when traversing the tree)
-            // also, make sure to only build this once because doing so here is very slow
-            //TODO: make a faster comparator that quits when it know < 0 or > 0
-
         while (!cardText.equals(getCard().getCardText())) {
-            if (cardText.compareTo(getCard().getCardText()) < 0) {
-            //if (collator.compare(cardText, getCard().getCardText()) < 0) {
+            if (collator.lessThan(cardText, getCard().getCardText())) {
                 if (!nonNull(moveToPrev(optimize))) { // moves current node to previous
                     //if current node is now null, search is complete and unsuccessful
                     return null;
@@ -110,7 +100,7 @@ public class AlphabeticalCardTree extends BinaryCardTree {
         }
         //find a node with text that starts with the pattern
         while (!getCard().getCardText().startsWith(pattern)) {
-            if (pattern.compareTo(getCard().getCardText()) < 0) {
+            if (collator.lessThan(pattern, getCard().getCardText())) {
                 if (!nonNull(moveToPrev(optimize))) { // moves current node to previous
                     //if current node is now null, search is complete and unsuccessful
                     return null;

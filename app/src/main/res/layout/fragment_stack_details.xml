@@ -43,21 +43,33 @@
         android:text="@string/stack_question_verbiage"
         android:gravity="center"
         android:layout_weight="1"/>
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/stackQuestionTextInputLayout"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1">
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/textInputQuestion"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/stackQuestionTextInputLayout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:hint="@string/stack_question_default"
-            android:selectAllOnFocus="true"
-            android:textColorHint="#616161"
-            android:inputType="text"
-            android:imeOptions="actionNext"/>
-    </com.google.android.material.textfield.TextInputLayout>
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/textInputQuestion"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:hint="@string/stack_question_default"
+                android:selectAllOnFocus="true"
+                android:textColorHint="#616161"
+                android:inputType="text"
+                android:imeOptions="actionNext"/>
+        </com.google.android.material.textfield.TextInputLayout>
+        <Spinner
+            android:id="@+id/questionLanguageSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+    </LinearLayout>
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -112,21 +124,33 @@
         android:text="@string/stack_jeopardy_verbiage"
         android:gravity="center"
         android:layout_weight="1"/>
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/stackAnswerTextInputLayout"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1">
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/textInputAnswer"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/stackAnswerTextInputLayout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:hint="@string/stack_answer_default"
-            android:selectAllOnFocus="true"
-            android:textColorHint="#616161"
-            android:inputType="text"
-            android:imeOptions="actionNext"/>
-    </com.google.android.material.textfield.TextInputLayout>
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/textInputAnswer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:hint="@string/stack_answer_default"
+                android:selectAllOnFocus="true"
+                android:textColorHint="#616161"
+                android:inputType="text"
+                android:imeOptions="actionNext"/>
+        </com.google.android.material.textfield.TextInputLayout>
+        <Spinner
+            android:id="@+id/answerLanguageSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+    </LinearLayout>
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -172,12 +196,13 @@
         android:layout_height="10dp"
         android:background="?android:attr/listDivider" />
     <!-- RESULTS -->
-    <Button
-        android:id="@+id/button_generate"
-        android:layout_width="wrap_content"
+    <TextView
+        android:id="@+id/illustrationsHeader"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:text="@string/stack_detail_illustrations_header"
         android:gravity="center"
-        android:text="@string/illustrationsButton"/>
+        android:layout_weight="1"/>
     <TextView
         android:id="@+id/stackQuestionResult"
         android:layout_width="match_parent"

@@ -24,35 +24,45 @@ public class StackDetails {
     public StackDetails(Context context) {
         this.databaseVersion = context.getString(R.string.database_version);
         this.description = "";
+        this.questionLocale = Locale.getDefault();
         this.questionLabel = context.getString(R.string.stack_question_default);
         this.questionPrefix = context.getString(R.string.stack_question_prefix);
         this.questionPostfix = context.getString(R.string.stack_question_postfix);
+        this.answerLocale = Locale.getDefault();
         this.answerLabel = context.getString(R.string.stack_answer_default);
         this.jeopardyPrefix = context.getString(R.string.stack_jeopardy_pretfix);
         this.jeopardyPostfix = context.getString(R.string.stack_jeopardy_postfix);
-        this.questionLocale = Locale.ENGLISH;
-        this.answerLocale = Locale.ENGLISH;
     }
 
     public StackDetails(MyFileInputStream inputStream) {
         this.databaseVersion = inputStream.readString();
         this.description = inputStream.readString();
+        if (this.databaseVersion.equals("0.01")) {
+            this.questionLocale = Locale.ENGLISH;
+        } else {
+            this.questionLocale = new Locale(inputStream.readString());
+        }
         this.questionLabel = inputStream.readString();
         this.questionPrefix = inputStream.readString();
         this.questionPostfix = inputStream.readString();
+        if (this.databaseVersion.equals("0.01")) {
+            this.answerLocale = new Locale("es");
+        } else {
+            this.answerLocale = new Locale(inputStream.readString());
+        }
         this.answerLabel = inputStream.readString();
         this.jeopardyPrefix = inputStream.readString();
         this.jeopardyPostfix = inputStream.readString();
-        this.questionLocale = Locale.ENGLISH;
-        this.answerLocale = new Locale("es");
     }
 
     public void writeFile(String databaseVersion, MyFileOutputStream outputStream) {
         outputStream.writeString(databaseVersion);
         outputStream.writeString(this.description);
+        outputStream.writeString(this.questionLocale.getLanguage());
         outputStream.writeString(this.questionLabel);
         outputStream.writeString(this.questionPrefix);
         outputStream.writeString(this.questionPostfix);
+        outputStream.writeString(this.answerLocale.getLanguage());
         outputStream.writeString(this.answerLabel);
         outputStream.writeString(this.jeopardyPrefix);
         outputStream.writeString(this.jeopardyPostfix);

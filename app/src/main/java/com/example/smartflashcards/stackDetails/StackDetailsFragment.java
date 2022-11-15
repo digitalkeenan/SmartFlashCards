@@ -2,6 +2,7 @@ package com.example.smartflashcards.stackDetails;
 
 import static java.util.Objects.nonNull;
 
+import android.content.Context;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -14,16 +15,21 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.example.smartflashcards.R;
 import com.example.smartflashcards.databinding.FragmentStackDetailsBinding;
+import com.example.smartflashcards.keenanClasses.MyCollator;
 import com.example.smartflashcards.keenanClasses.MyFileInputStream;
 import com.example.smartflashcards.keenanClasses.MyFileOutputStream;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Locale;
 
 public class StackDetailsFragment extends Fragment {
 
@@ -31,14 +37,20 @@ public class StackDetailsFragment extends Fragment {
 
     private FragmentStackDetailsBinding binding;
 
-    File detailsFile = null;
+    private File detailsFile = null;
+
+    private MyCollator collator = null;
+    private ArrayList<Locale> questionLocales;
+    private ArrayList<Locale> answerLocales;
 
     private TextView nameTextView;
     private EditText descriptionEditText;
     private EditText questionLabelEditText;
+    private Spinner questionLanguageSpinner;
     private EditText questionPretextEditText;
     private EditText questionPosttextEditText;
     private EditText answerLabelEditText;
+    private Spinner answerLanguageSpinner;
     private EditText jeopardyPretextEditText;
     private EditText jeopardyPosttextEditText;
 
@@ -62,6 +74,9 @@ public class StackDetailsFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        Context context = getContext();
+        this.collator = new MyCollator(Locale.getDefault());
+
         super.onViewCreated(view, savedInstanceState);
         this.stackDetailsViewModel = new ViewModelProvider(requireActivity()).get(StackDetailsViewModel.class);
 
@@ -96,6 +111,30 @@ public class StackDetailsFragment extends Fragment {
         this.questionLabelEditText = view.findViewById(R.id.textInputQuestion);
         this.questionLabelEditText.setText(this.stackDetailsViewModel.getStackDetails().getValue().getQuestionLabel());
 
+        this.questionLanguageSpinner = view.findViewById(R.id.questionLanguageSpinner);
+        this.questionLocales
+                = buildLocaleList(this.stackDetailsViewModel.getStackDetails().getValue().getQuestionLocale());
+        //TODO: replace ArrayAdapter with custom adapter that works directly with Locales array
+        ArrayList<String> questionStrings = getDisplayStrings(questionLocales);
+        ArrayAdapter questionLanguageSpinnerAdapter = new ArrayAdapter(
+                context,
+                androidx.appcompat.R.layout.support_simple_spinner_dropdown_item,
+                questionStrings);
+        questionLanguageSpinnerAdapter.setDropDownViewResource(androidx.appcompat.R.layout.support_simple_spinner_dropdown_item);
+        this.questionLanguageSpinner.setAdapter(questionLanguageSpinnerAdapter);
+
+        this.answerLanguageSpinner = view.findViewById(R.id.answerLanguageSpinner);
+        this.answerLocales
+                = buildLocaleList(this.stackDetailsViewModel.getStackDetails().getValue().getAnswerLocale());
+        //TODO: replace ArrayAdapter with custom adapter that works directly with Locales array
+        ArrayList<String> answerStrings = getDisplayStrings(answerLocales);
+        ArrayAdapter answerLanguageSpinnerAdapter = new ArrayAdapter(
+                context,
+                androidx.appcompat.R.layout.support_simple_spinner_dropdown_item,
+                answerStrings);
+        answerLanguageSpinnerAdapter.setDropDownViewResource(androidx.appcompat.R.layout.support_simple_spinner_dropdown_item);
+        this.answerLanguageSpinner.setAdapter(answerLanguageSpinnerAdapter);
+
         this.questionPretextEditText = view.findViewById(R.id.textInputQuestionPretext);
         this.questionPretextEditText.setText(this.stackDetailsViewModel.getStackDetails().getValue().getQuestionPrefix());
 
@@ -112,14 +151,6 @@ public class StackDetailsFragment extends Fragment {
         this.jeopardyPosttextEditText.setText(this.stackDetailsViewModel.getStackDetails().getValue().getJeopardyPostfix());
 
         generateIllustrations(view);
-
-        //TODO: if updating on all the key-presses works well, remove this button
-        this.binding.buttonGenerate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View buttonview) {
-                generateIllustrations(view);
-            }
-        });
 
         this.jeopardyPosttextEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -193,6 +224,11 @@ public class StackDetailsFragment extends Fragment {
         this.stackDetailsViewModel.getStackDetails().getValue().setAnswerLabel(this.answerLabelEditText.getText().toString());
         this.stackDetailsViewModel.getStackDetails().getValue().setJeopardyPrefix(this.jeopardyPretextEditText.getText().toString());
         this.stackDetailsViewModel.getStackDetails().getValue().setJeopardyPostfix(this.jeopardyPosttextEditText.getText().toString());
+        int spinnerPosition;
+        spinnerPosition = this.questionLanguageSpinner.getSelectedItemPosition();
+        this.stackDetailsViewModel.getStackDetails().getValue().setQuestionLocale(this.questionLocales.get(spinnerPosition));
+        spinnerPosition = this.answerLanguageSpinner.getSelectedItemPosition();
+        this.stackDetailsViewModel.getStackDetails().getValue().setAnswerLocale(this.answerLocales.get(spinnerPosition));
 
         //set save-trigger for Main Activity to save to disk and check against it's active stack
         this.stackDetailsViewModel.setStackDetailsUpdated(this.stackDetailsViewModel.getStackName().getValue());
@@ -200,7 +236,40 @@ public class StackDetailsFragment extends Fragment {
         this.binding = null;
     }
 
-    public void generateIllustrations (View view) {
+    private ArrayList<Locale> buildLocaleList (Locale defaultLocale) {
+        Locale[] availableLocales = Locale.getAvailableLocales();
+        ArrayList<Locale> localeList = new ArrayList<>();
+        // put default locale at position 0
+        localeList.add(defaultLocale);
+        for (Locale locale : availableLocales) {
+            if (!locale.getLanguage().equals(defaultLocale.getLanguage())) {
+                // if not default locale, search remaining locales for alphabetical position
+                int index = 1;
+                while ((index < localeList.size()) && (this.collator.greaterThan(
+                        locale.getDisplayLanguage(), localeList.get(index).getDisplayLanguage()))) {
+                    index++;
+                }
+                if (index == localeList.size()) {
+                    // add to end
+                    localeList.add(locale);
+                } else if (!locale.getLanguage().equals(localeList.get(index).getLanguage())) {
+                    // if not already in the list, add it in this alphabetical position
+                    localeList.add(index, locale);
+                }
+            }
+        }
+        return localeList;
+    }
+
+    private ArrayList<String> getDisplayStrings (ArrayList<Locale> locales){
+        ArrayList<String> displayStrings = new ArrayList<>(locales.size());
+        for (Locale locale : locales) {
+            displayStrings.add(locale.getDisplayLanguage());
+        }
+        return displayStrings;
+    }
+
+    private void generateIllustrations (View view) {
         TextView resultsTextView;
         String result;
 

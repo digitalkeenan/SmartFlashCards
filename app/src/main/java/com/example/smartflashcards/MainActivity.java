@@ -72,7 +72,34 @@ public class MainActivity extends AppCompatActivity {
                 // and it's the same stack as in cardStackViewModel, update...
                 if (nonNull(this.cardStackViewModel.getStackName().getValue())
                         && stackDetailsUpdated.equals(this.cardStackViewModel.getStackName().getValue())){
+                    String currentQuestionLanguage =
+                            this.cardStackViewModel.getStackDetails().getValue().getQuestionLocale().getLanguage();
+                    String currentAnswerLanguage =
+                            this.cardStackViewModel.getStackDetails().getValue().getAnswerLocale().getLanguage();
+                    String newQuestionLanguage =
+                            this.stackDetailsViewModel.getStackDetails().getValue().getQuestionLocale().getLanguage();
+                    String newAnswerLanguage =
+                            this.stackDetailsViewModel.getStackDetails().getValue().getAnswerLocale().getLanguage();
+                    boolean languageChanged = !(newQuestionLanguage.equals(currentQuestionLanguage)
+                                            && newAnswerLanguage.equals(currentAnswerLanguage));
+
                     this.cardStackViewModel.setStackDetails(this.stackDetailsViewModel.getStackDetails().getValue());
+
+                    // if a language changed, must reload to re-sort alphabetical stacks
+                    if (languageChanged) {
+                        MyFileInputStream alphaInputStream = openInputStream(this.activeStack, getString(R.string.answer_card_file));
+                        MyFileInputStream quizInputStream = openInputStream(this.activeStack, getString(R.string.quiz_card_file));
+                        if (nonNull(alphaInputStream) && nonNull(quizInputStream)) {
+                            //TODO: when adding file-count, read and write each file,
+                            // watching for any cards that need to switch files
+                            this.cardStackViewModel.loadFlashcardStack(
+                                    this.cardStackViewModel.getStackDetails().getValue().getDatabaseVersion(),
+                                    alphaInputStream,
+                                    quizInputStream);
+                            closeInputStream(alphaInputStream);
+                            closeInputStream(quizInputStream);
+                        }
+                    }
                 }
             }
         });
