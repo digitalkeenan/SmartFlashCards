@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 public class StackDetailsViewModel extends ViewModel {
+    private final MutableLiveData<String> stackSelection = new MutableLiveData<>();
     private final MutableLiveData<String> stackName = new MutableLiveData<>();
     private final MutableLiveData<StackDetails> stackDetails = new MutableLiveData<>();
 
@@ -14,7 +15,11 @@ public class StackDetailsViewModel extends ViewModel {
     /**
      * SETTERS
      */
+    public void setStackSelection(String stack) {
+        this.stackSelection.setValue(stack);
+    }
     public void selectStack(String stack) {
+        setStackSelection(stack);
         this.stackName.setValue(stack);
         this.stackDetails.setValue(null); //clear details; stackDetailsFragment will load them
     }
@@ -28,14 +33,17 @@ public class StackDetailsViewModel extends ViewModel {
     /**
      * GETTERS
      */
+    public LiveData<String> getStackSelection() {
+        return this.stackSelection;
+    }
     public LiveData<String> getStackName() {
-        return stackName;
+        return this.stackName;
     }
     public LiveData<StackDetails> getStackDetails() {
-        return stackDetails;
+        return this.stackDetails;
     }
     public LiveData<String> getStackDetailsUpdated() {
-        return stackDetailsUpdated;
+        return this.stackDetailsUpdated;
     }
 
     /**

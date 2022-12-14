@@ -139,6 +139,7 @@ public class StackSelectionFragment extends Fragment {
              */
             this.tracker.getSelection().forEach(listItem -> {
                 String itemSelection = this.adapter.getString(listItem.intValue());
+                this.stackDetailsViewModel.setStackSelection(itemSelection);
                 String stackName = this.cardStackViewModel.getStackName().getValue();
                 if (nonNull(stackName) && itemSelection.equals(stackName)) {
                     //if selected stack is already the one in the viewModel, do nothing
@@ -251,14 +252,9 @@ public class StackSelectionFragment extends Fragment {
         });
 
         /**
-         * OBSERVE STACK-NAME in both viewModels and update view on change in either
+         * OBSERVE STACK SELECTION
          */
-        stackDetailsViewModel.getStackName().observe(getViewLifecycleOwner(), stackName -> {
-            this.adapter.updateData(directory);
-            makeSelection(stackName);
-            enforceMinimumSelection();
-        });
-        cardStackViewModel.getStackName().observe(getViewLifecycleOwner(), stackName -> {
+        stackDetailsViewModel.getStackSelection().observe(getViewLifecycleOwner(), stackName -> {
             this.adapter.updateData(directory);
             makeSelection(stackName);
             enforceMinimumSelection();
