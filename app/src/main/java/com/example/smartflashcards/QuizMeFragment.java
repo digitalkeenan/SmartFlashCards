@@ -26,6 +26,7 @@ import android.widget.Toast;
 
 import com.example.smartflashcards.cards.QuestionCard;
 import com.example.smartflashcards.databinding.FragmentQuizmeBinding;
+import com.example.smartflashcards.dialogs.DialogData;
 
 public class QuizMeFragment extends Fragment {
 
@@ -243,17 +244,17 @@ public class QuizMeFragment extends Fragment {
             }
             int finalPlacement = this.cardStackViewModel.moveQuizMeCard(newPlacement);
 
-            String text = result + iterationString + "\n--------------\nPlacement try = " + newPlacement + "; actual = " + finalPlacement;
-            Context context = getContext();
-            Toast toast = Toast.makeText(context, text, Toast.LENGTH_LONG);
-            toast.show();
+            //TODO: change message to "Moved to position " ##
+            String message = result + iterationString + "\n--------------\nPlacement try = " + newPlacement + "; actual = " + finalPlacement;
+            DialogData dialogData = new DialogData(DialogData.Type.CONTINUE, DialogData.Action.noAction);
+            dialogData.setMessage(message);
+            this.cardStackViewModel.setDialogData(dialogData);
 
-            //TODO: use dialogs to tell user right or wrong, distance of next placement (up to about ...)
-            // display all answers, provide options for moving on or editing the answers,
+            //TODO: add to dialog:
+            // provide option editing the answers,
             // if wrong, provide any questions that match the answer given,
-            // and include a checkbox for the user to proclaim himself correct (Require, edit answers button)
-            // Do we allow continue button while "My answer is correct" box is checked?
-            //     - perhaps for case where the user has a slight variation or typo?
+            // add checkbox for the user to proclaim himself correct (Require, edit answers button)
+
         }
     }
 }
