@@ -7,6 +7,7 @@ import android.content.Context;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
+import androidx.navigation.NavController;
 
 import com.example.smartflashcards.cardTrees.AlphabeticalCardTree;
 import com.example.smartflashcards.cardTrees.BinaryCardTree;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Stack;
 
 public class CardStackViewModel extends ViewModel {
+    public NavController navController = null;
 
     // STACK STUFF ////////////////////////////////////////////////////////////////////////////////
     private final MutableLiveData<String> stackName = new MutableLiveData<>();
@@ -254,6 +256,9 @@ public class CardStackViewModel extends ViewModel {
     // because when a card is modified rather than added,
     // forceCardReview may be set by the ProposeCardReview dialog
     public void addQuestionCard(String question, String answer, AnswerCard answerCard, int placement) {
+        addQuestionCard(question, answer, answerCard, placement, true);
+    }
+    public void addQuestionCard(String question, String answer, AnswerCard answerCard, int placement, boolean userAdded) {
         if (nonNull(question) && !question.equals("") && nonNull(answer) && !answer.equals("")) {
             QuestionCard newCard = new QuestionCard(question, answer);
             QuestionCard questionCard = (QuestionCard) this.flashcardStack.getQuestionCardStack().
@@ -273,20 +278,22 @@ public class CardStackViewModel extends ViewModel {
                         setStackSelectionChanged();
                     }
                     // attempt to add new answer
-                    if (addAnswerToQuestionCard(answer, questionCard)) {
-                        // successful
-                        DialogData dialogData = new DialogData(DialogData.Type.RECOMMEND_REVIEW, DialogData.Action.setForceCardReview);
-                        String message = "Your " + getStackDetails().getValue().getAnswerLabel();
-                        message += " was added as an additional valid response for that pre-existing ";
-                        message += getStackDetails().getValue().getQuestionLabel();
-                        message += "\n\nIt is recommended to review the flashcard to ensure that the new valid response is unique";
-                        dialogData.setMessage(message);
-                        dialogData.setFlashCard(questionCard); // proposing to review the answers for this questionCard
-                        setDialogData(dialogData);
-                    } else {
-                        DialogData dialogData = new DialogData(DialogData.Type.CONTINUE, DialogData.Action.noAction);
-                        dialogData.setMessage("That exact flashcard already exists");
-                        setDialogData(dialogData);
+                    boolean successful = addAnswerToQuestionCard(answer, questionCard);
+                    if (userAdded) {
+                        if (successful) {
+                            DialogData dialogData = new DialogData(DialogData.Type.RECOMMEND_REVIEW, DialogData.Action.setForceCardReview);
+                            String message = "Your " + getStackDetails().getValue().getAnswerLabel();
+                            message += " was added as an additional valid response for that pre-existing ";
+                            message += getStackDetails().getValue().getQuestionLabel();
+                            message += "\n\nIt is recommended to review the flashcard to ensure that the new valid response is unique";
+                            dialogData.setMessage(message);
+                            dialogData.setFlashCard(questionCard); // proposing to review the answers for this questionCard
+                            setDialogData(dialogData);
+                        } else {
+                            DialogData dialogData = new DialogData(DialogData.Type.CONTINUE, DialogData.Action.noAction);
+                            dialogData.setMessage("That exact flashcard already exists");
+                            setDialogData(dialogData);
+                        }
                     }
                 }
             } else {
@@ -309,15 +316,17 @@ public class CardStackViewModel extends ViewModel {
                         if (getStackType() == FlashcardViewFilter.StackType.ANSWER) {
                             setStackSelectionChanged();
                         }
-                        DialogData dialogData = new DialogData(DialogData.Type.RECOMMEND_REVIEW, DialogData.Action.setForceCardReview);
-                        String message = "Your " + getStackDetails().getValue().getQuestionLabel();
-                        message += " was added as an additional valid flashcard for that pre-existing ";
-                        message += getStackDetails().getValue().getAnswerLabel();
-                        message += "\n\nIt is recommended to review the flashcards for that response to ensure that this new ";
-                        message += getStackDetails().getValue().getQuestionLabel() + " is unique";
-                        dialogData.setMessage(message);
-                        dialogData.setFlashCard(oldAnswerCard); // proposing to review the questions for this answerCard
-                        setDialogData(dialogData);
+                        if (userAdded) {
+                            DialogData dialogData = new DialogData(DialogData.Type.RECOMMEND_REVIEW, DialogData.Action.setForceCardReview);
+                            String message = "Your " + getStackDetails().getValue().getQuestionLabel();
+                            message += " was added as an additional valid flashcard for that pre-existing ";
+                            message += getStackDetails().getValue().getAnswerLabel();
+                            message += "\n\nIt is recommended to review the flashcards for that response to ensure that this new ";
+                            message += getStackDetails().getValue().getQuestionLabel() + " is unique";
+                            dialogData.setMessage(message);
+                            dialogData.setFlashCard(oldAnswerCard); // proposing to review the questions for this answerCard
+                            setDialogData(dialogData);
+                        }
                     } else {
                         // new answer card
                         if (getStackType() == FlashcardViewFilter.StackType.ANSWER) {

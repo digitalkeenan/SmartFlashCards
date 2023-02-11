@@ -196,7 +196,7 @@ public class QuizMeFragment extends Fragment {
     }
 
     private void checkResponse () {
-        String response = editResponse.getText().toString();
+        String response = editResponse.getText().toString().trim();
         QuestionCard questionCard = cardStackViewModel.findQuestionCard(question);
 
         if (nonNull(questionCard) && nonNull(response) && !response.equals("")) {
@@ -217,9 +217,11 @@ public class QuizMeFragment extends Fragment {
 
             iterationBoolean = false; //could use hash contains method, but need to loop through them anyway...
             iterationString = "";
-            questionCard.getAnswers().forEach((key, answer) -> {
+            questionCard.getAnswers().forEach((key, rawAnswer) -> {
+                String answer = (String) rawAnswer;
+                answer = answer.trim();
                 //TODO: ignore case? sometimes? just add case variations as other valid answers?
-                if (response.equals((String) answer)) {
+                if (response.equals(answer)) {
                     iterationBoolean = true;
                     cardStackViewModel.getQuizMeCard().getValue().recordCorrectResponse((int) key);
                 } else {
@@ -230,16 +232,26 @@ public class QuizMeFragment extends Fragment {
             int numberAnswers = questionCard.getAnswers().size();
             int newPlacement = this.cardStackViewModel.getQuizMeCard().getValue().getLastPlacement();
             if (iterationBoolean) {
-                result = getString(R.string.right_answer);
                 newPlacement = newPlacement * 4; //TODO: Perhaps change to exponent instead of multiplier; either way, drive the number statistically for each user
+                if (newPlacement == 0) {
+                    newPlacement = 10; // TODO: change to learned value
+                }
+                result = getString(R.string.right_answer);
                 if (numberAnswers > 1) {
                     result += "\n--------------\nAdditional correct answer";
                     result += (numberAnswers > 2) ? "s:" : ":";
                 }
             } else {
-                result = getString(R.string.wrong_answer);
                 newPlacement = newPlacement / 2; //TODO: statistically drive this number for each user (also may need different formula for first time)
-                result += "\n--------------\nCorrect answer";
+                result = getString(R.string.wrong_answer);
+                result += "\n--------------\nThe ";
+                result += this.cardStackViewModel.getStackDetails().getValue().getQuestionLabel();
+                result += " was: " + this.cardStackViewModel.getStackDetails().getValue().getQuestionPrefix();
+                result += this.question;
+                result += this.cardStackViewModel.getStackDetails().getValue().getQuestionPostfix();
+                result += "\n\nYour response was: ";
+                result += response;
+                result += "\n\n--------------\nCorrect answer";
                 result += (numberAnswers > 1) ? "s:" : ":";
             }
             int finalPlacement = this.cardStackViewModel.moveQuizMeCard(newPlacement);

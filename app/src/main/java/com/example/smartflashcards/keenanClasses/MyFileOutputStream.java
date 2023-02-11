@@ -3,6 +3,7 @@ package com.example.smartflashcards.keenanClasses;
 import static java.util.Objects.nonNull;
 
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -11,6 +12,10 @@ import java.util.Hashtable;
 import java.util.List;
 
 public class MyFileOutputStream extends FileOutputStream {
+    public MyFileOutputStream(FileDescriptor fileDescriptor) throws FileNotFoundException {
+        super(fileDescriptor);
+    }
+
     public MyFileOutputStream(File file) throws FileNotFoundException {
         super(file);
     }

@@ -1,12 +1,18 @@
 package com.example.smartflashcards.keenanClasses;
 
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public class MyFileInputStream extends FileInputStream {
+
+    public MyFileInputStream(FileDescriptor fileDescriptor) throws FileNotFoundException {
+        super(fileDescriptor);
+    }
+
     public MyFileInputStream(File file) throws FileNotFoundException {
         super(file);
     }

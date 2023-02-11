@@ -5,6 +5,8 @@
     <string name="action_delete_selection">Delete Selection</string>
     <string name="action_review_selection">Review Selection</string>
     <string name="action_edit_selection">Edit Selection</string>
+    <string name="action_export_selection">Export Selection</string>
+    <string name="action_import_cards">Import Cards</string>
     <string name="action_review_details">Review Details</string>
     <string name="action_edit_question">Edit Question</string>
     <string name="action_review_quiz_stack">Review Quiz Stack</string>

@@ -130,8 +130,7 @@ public class CardBuilderDialogFragment extends DialogStackFragment {
             }
         });
 
-        this.checkBoxEndPlacement.toggle();
-        this.editPlacement.setText("-1");
+        this.editPlacement.setText("0");
 
         if (nonNull(super.dialogData)) {
             switch (super.dialogData.getAction()) {
@@ -222,12 +221,12 @@ public class CardBuilderDialogFragment extends DialogStackFragment {
 
     private int placement() {
         String placementString = this.editPlacement.getText().toString();
-        int placement = -1;
+        int placement = 0;
         if (nonNull(placementString) && !placementString.equals("")) {
             try {
                 placement = Integer.parseInt(placementString);
             } catch (NumberFormatException e) {
-                //for excessively large entry, no need to do anything - just keep the -1 default
+                //for excessively large entry, no need to do anything - just keep the default
             }
         }
         if (placement < 0) {

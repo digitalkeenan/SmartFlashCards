@@ -2,7 +2,11 @@ package com.example.smartflashcards;
 
 import static java.util.Objects.nonNull;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -10,9 +14,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import com.example.smartflashcards.cards.QuestionCard;
 import com.example.smartflashcards.databinding.ActivityMainBinding;
 import com.example.smartflashcards.dialogs.CardBuilderDialogFragment;
 import com.example.smartflashcards.dialogs.ContinueDialogFragment;
@@ -26,12 +32,18 @@ import com.example.smartflashcards.keenanClasses.MyFileOutputStream;
 import com.example.smartflashcards.stackDetails.StackDetails;
 import com.example.smartflashcards.stackDetails.StackDetailsViewModel;
 
+import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -51,6 +63,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         Context context = getApplicationContext();
+
+        //TODO: move to where permission is needed
+        // add check for self-permission
+        // add check for rational required
+        // gracefully handle permission-denied
+        //Manifest.permission.REQU
 
         this.stackDir = new File(context.getFilesDir(), getString(R.string.stack_directory));
         if (!this.stackDir.exists()) {
@@ -228,12 +246,24 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(binding.toolbar);
 
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+
+        //TODO: if this works, add getter in view model and somehow kill the new navcontroller
+        // else, try navigating with old navcontroller (didn't help doing this here, but it did recognize the correct state of the old navcontroller - so it is still active ):
+        // try setviewnavcontroller
+        // try navController.saveState and navController.restoreState (didn't work ):
+        /*if (nonNull(this.cardStackViewModel.navController)) {
+            navController = this.cardStackViewModel.navController;
+            navController.navigate(R.id.action_stackSelectionFragment_to_stackDetailsFragment);
+        } else*/ {
+            this.cardStackViewModel.navController = navController;
+        }
+
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
         if (nonNull(savedInstanceState)) {
             //TODO: restore what must be restored to preserve operation during orientation change, etc.
-            //this.currentStack.restoreState(savedInstanceState.getBundle("alphaStack"));
+            navController.restoreState(savedInstanceState.getBundle("navController"));
         }
     }
 
@@ -339,7 +369,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         //TODO: save what must be saved to preserve operation during orientation change, etc.
-        //outState.putBundle("alphaStack", this.currentStack.saveState());
+        outState.putBundle("navController", this.cardStackViewModel.navController.saveState());
     }
 
     @Override
@@ -351,6 +381,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Context context = getApplicationContext();
+
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
@@ -364,14 +396,127 @@ public class MainActivity extends AppCompatActivity {
             // - colors
             // - rotation lock
             // - language selection
-            Context context = getApplicationContext();
             Toast toast = Toast.makeText(context, "main menu settings option selected", Toast.LENGTH_LONG);
             toast.show();
 
             return true;
         }
+        CharSequence title = item.getTitle();
+        if (nonNull(title)) { //check for null because back button also calls this and has no title
+            /**
+             * OPTION EXPORT CARDS
+             */
+            if (title.equals(getString(R.string.action_export_selection))) {
+                Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                intent.setType("*/*");
+                startActivityForResult(intent, 10);
+                return true;
+            }
+            /**
+             * OPTION IMPORT CARDS
+             */
+            if (title.equals(getString(R.string.action_import_cards))) {
+                if (nonNull(cardStackViewModel.getStackName().getValue())) {
+                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                    intent.setType("*/*");
+                    startActivityForResult(intent, 20);
+                } else {
+                    Toast toast = Toast.makeText(context, "You must select a flashcard stack into which to import.", Toast.LENGTH_LONG);
+                    toast.show();
+                }
+                return true;
+            }
+        }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
+
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == 10) {
+                if (resultData != null) {
+                    Uri uri = resultData.getData();
+
+                    File directory = new File(getApplication().getFilesDir(), getString(R.string.stack_directory));
+                    File stackDir = new File(directory, this.cardStackViewModel.getStackName().getValue());
+                    File internalFile = new File (stackDir, "answer_cards");
+                    FileChannel inChannel = null;
+                    FileChannel outChannel = null;
+
+                    try {
+                        inChannel = new FileInputStream(internalFile).getChannel();
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        ParcelFileDescriptor pfd = this.getContentResolver().
+                                openFileDescriptor(uri, "w");
+
+                        outChannel = new MyFileOutputStream(pfd.getFileDescriptor()).getChannel();
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+
+                    try {
+                        inChannel.transferTo(0, inChannel.size(), outChannel);
+                        if (inChannel != null)
+                            inChannel.close();
+                        if (outChannel != null)
+                            outChannel.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } else if (requestCode == 20) {
+                if (resultData != null) {
+                    Uri uri = resultData.getData();
+                    //TODO: add something to the file to check if it is a valid file (like a special starting string)
+
+                    MyFileInputStream alphaInputStream = null;
+                    try {
+                        ParcelFileDescriptor pfd = this.getContentResolver().
+                                        openFileDescriptor(uri, "r");
+
+                        alphaInputStream = new MyFileInputStream(pfd.getFileDescriptor());
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+
+                    try {
+                        alphaInputStream.read();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    int numberOfCards = 0;
+                    try {
+                        numberOfCards = alphaInputStream.read();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    for (int cardIndex=0; cardIndex < numberOfCards; cardIndex++) {
+                        Integer idNumber = null;
+                        try {
+                            idNumber = alphaInputStream.read();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        QuestionCard questionCard = new QuestionCard(alphaInputStream);
+                        questionCard.getAnswers().forEach((key, answer) -> {
+                            this.cardStackViewModel.addQuestionCard(questionCard.getCardText(),
+                                    (String) answer, null, 10, false);
+                        });
+                    }
+
+                    try {
+                        alphaInputStream.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+        }
     }
 
     @Override

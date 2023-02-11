@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.SearchView;
+import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
@@ -85,6 +86,12 @@ public class StackViewFragment extends RecyclerFragment {
         return mySelectionPosition;
     }
 
+    private void displayCount(View view) {
+        TextView countView = view.findViewById(R.id.CardCountTextView);
+        String count = String.valueOf(this.cardStackViewModel.getViewSize());
+        countView.setText(count + "..");
+    }
+
     private void startFilter(String pattern) {
         if (nonNull(pattern)) {
             this.cardStackViewModel.startFilter(pattern, getVisibleItemCount());
@@ -129,6 +136,7 @@ public class StackViewFragment extends RecyclerFragment {
         super.onViewCreated(view, savedInstanceState);
 
         SearchView searchText = view.findViewById(R.id.textInputSearch);
+        displayCount(view);
 
         /**
          * OBSERVE NOTIFY CHANGES
@@ -136,6 +144,7 @@ public class StackViewFragment extends RecyclerFragment {
         this.cardStackViewModel.getStackSwitched().observe(getViewLifecycleOwner(), switched -> {
             if (switched) {
                 notifyDataSetChanged();
+                displayCount(view);
             }
         });
         this.cardStackViewModel.getStackSelectionChanged().observe(getViewLifecycleOwner(), position -> {
@@ -146,6 +155,7 @@ public class StackViewFragment extends RecyclerFragment {
         this.cardStackViewModel.getStackNewItem().observe(getViewLifecycleOwner(), position -> {
             if (nonNull(position)) {
                 notifyItemInserted(position);
+                displayCount(view);
             }
         });
         this.cardStackViewModel.getStackDeletedItem().observe(getViewLifecycleOwner(), position -> {
@@ -153,6 +163,7 @@ public class StackViewFragment extends RecyclerFragment {
                 // Only adjust selection if the deleted item is the selected one
                 // - to prevent selection updates during clean-up of invalid quizCards
                 notifyItemRemoved(position, (this.cardStackViewModel.getSelectionPosition().equals(position)));
+                displayCount(view);
             }
         });
         this.cardStackViewModel.getStackChangedItem().observe(getViewLifecycleOwner(), position -> {

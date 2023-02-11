@@ -3,6 +3,7 @@ package com.example.smartflashcards.recyclers.stackView;
 import static java.util.Objects.nonNull;
 
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -14,6 +15,13 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.smartflashcards.FlashcardViewFilter;
 import com.example.smartflashcards.R;
+import com.example.smartflashcards.cardTrees.AlphabeticalCardTree;
+import com.example.smartflashcards.cards.QuestionCard;
+import com.example.smartflashcards.keenanClasses.MyFileInputStream;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class AlphabeticalStackViewFragment extends StackViewFragment {
 
@@ -42,6 +50,7 @@ public class AlphabeticalStackViewFragment extends StackViewFragment {
         MenuItem deleteSelection = menu.add(R.string.action_delete_selection);
         MenuItem editSelection = menu.add(R.string.action_edit_selection);
         MenuItem reviewSelection = menu.add(R.string.action_review_selection);
+        MenuItem importCards = menu.add(R.string.action_import_cards);
         super.onCreateOptionsMenu(menu, inflater);
     }
 

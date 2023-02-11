@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -34,6 +35,11 @@ import com.example.smartflashcards.stackDetails.StackDetailsViewModel;
 import com.example.smartflashcards.dialogs.DialogData;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
 
 public class StackSelectionFragment extends Fragment {
 
@@ -132,6 +138,44 @@ public class StackSelectionFragment extends Fragment {
                         .navigate(R.id.action_stackSelectionFragment_to_stackDetailsFragment);
                 return true;
             }
+            /**
+             * EXPORT SELECTION
+             *
+            if (title.equals(getString(R.string.action_export_selection))) {
+                this.tracker.getSelection().forEach(listItem -> {
+                    //TODO: quick and dirty below should be cleaned up and user file/dir selection added
+                    String itemSelection = this.adapter.getString(listItem.intValue());
+                    File stackDir = new File(this.directory, itemSelection);
+                    File internalFile = new File (stackDir, "answer_cards");
+                    //File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                    File downloadsDir = Environment.getExternalStorageDirectory();
+                    File externalDir = new File (downloadsDir, "smart_flash_cards");
+                    if (!externalDir.exists()) {
+                        externalDir.mkdir();
+                    }
+                    File externalFile = new File (externalDir, "smart_flash_cards_export");
+                    FileChannel inChannel = null;
+                    FileChannel outChannel = null;
+
+                    try {
+                        inChannel = new FileInputStream(internalFile).getChannel();
+                        outChannel = new FileOutputStream(externalFile).getChannel();
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+
+                    try {
+                        inChannel.transferTo(0, inChannel.size(), outChannel);
+                        if (inChannel != null)
+                            inChannel.close();
+                        if (outChannel != null)
+                            outChannel.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+                return true;
+            }*/
         } else {
             //null title means back-button was pressed
             /**
