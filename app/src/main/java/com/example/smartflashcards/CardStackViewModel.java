@@ -600,6 +600,38 @@ public class CardStackViewModel extends ViewModel {
     /**
      * QUIZ FUNCTIONS
      */
+    public int getQuizSize() {
+        return this.flashcardStack.getQuizStack().size();
+    }
+
+    public int getGoldStars() {
+        return this.flashcardStack.getQuizStack().getGoldStars();
+    }
+
+    public int getSilverStars() {
+        return this.flashcardStack.getQuizStack().getSilverStars();
+    }
+
+    public int incrementGoldStars() {
+        return this.flashcardStack.getQuizStack().incrementGoldStars();
+    }
+
+    public int incrementSilverStars() {
+        return this.flashcardStack.getQuizStack().incrementSilverStars();
+    }
+
+    public int decrementGoldStars() {
+        return this.flashcardStack.getQuizStack().decrementGoldStars();
+    }
+
+    public int decrementSilverStars() {
+        return this.flashcardStack.getQuizStack().decrementSilverStars();
+    }
+
+    public ArrayList<Integer> getQuizStats() {
+        return this.flashcardStack.getQuizStack().getStats();
+    }
+
     public void saveQuizStack(MyFileOutputStream outputStream) {
         this.flashcardStack.getQuizStack().writeFile(outputStream);
     }
@@ -628,8 +660,12 @@ public class CardStackViewModel extends ViewModel {
     }
 
     public int moveQuizMeCard(int placement) {
+        return moveQuizMeCard(placement, 0);
+    }
+
+    public int moveQuizMeCard(int placement, int limit) {
         // This moves the first card to the location number given
-        int finalPlacement = this.flashcardStack.moveQuizCard(placement);
+        int finalPlacement = this.flashcardStack.moveQuizCard(placement, limit);
         updateQuizMeCard();
         setQuizStackChanged(true);
         return finalPlacement;

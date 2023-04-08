@@ -24,20 +24,12 @@ public class AlphabeticalCardTree extends BinaryCardTree {
     }
 
     public void writeFile(MyFileOutputStream outputStream) {
-        try {
-            outputStream.write(getNextID());
-            outputStream.write(size());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        outputStream.writeInt(getNextID());
+        outputStream.writeInt(size());
 
         getHeadNode(); //set current node to the head node
         for (int cardIndex=0; cardIndex < size(); cardIndex++) {
-            try {
-                outputStream.write(getCurrentNode().getID());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            outputStream.writeInt(getCurrentNode().getID());
             getCard().writeFile(outputStream);
             nextTopDown();
         }

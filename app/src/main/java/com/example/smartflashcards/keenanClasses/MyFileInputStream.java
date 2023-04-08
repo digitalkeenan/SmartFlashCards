@@ -5,7 +5,9 @@ import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Hashtable;
 
 public class MyFileInputStream extends FileInputStream {
 
@@ -17,7 +19,17 @@ public class MyFileInputStream extends FileInputStream {
         super(file);
     }
 
-    //read a string stored in file as length and string bytes
+    public int readInt () {
+        ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+        try {
+            super.read(byteBuffer.array(), 0, 4);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return byteBuffer.getInt();
+    }
+
+    // read a string stored in file as length and string bytes
     public String readString () {
         //ArrayList<byte> bytes;
         String readString = "";
@@ -41,5 +53,35 @@ public class MyFileInputStream extends FileInputStream {
             e.printStackTrace();
         }
         return (val > 0);
+    }
+
+    // read string hashtable
+    public Hashtable readHashString (int hashSize) {
+        Hashtable hashtable = new Hashtable();
+        try {
+            int key;
+            for (int answer = 0; answer < hashSize; answer++) {
+                key = super.read();
+                hashtable.put(key, readString());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return hashtable;
+    }
+
+    // read int hashtable
+    public Hashtable readHashInt (int hashSize) {
+        Hashtable hashtable = new Hashtable();
+        try {
+            int key;
+            for (int answer = 0; answer < hashSize; answer++) {
+                key = super.read();
+                hashtable.put(key, readInt());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return hashtable;
     }
 }

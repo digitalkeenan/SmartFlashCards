@@ -7,6 +7,7 @@ import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Hashtable;
 import java.util.List;
@@ -18,6 +19,16 @@ public class MyFileOutputStream extends FileOutputStream {
 
     public MyFileOutputStream(File file) throws FileNotFoundException {
         super(file);
+    }
+
+    public void writeInt(int integer) {
+        ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+        byteBuffer.putInt(integer);
+        try {
+            super.write(byteBuffer.array());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     //write string as length and string bytes
@@ -73,7 +84,7 @@ public class MyFileOutputStream extends FileOutputStream {
         hashtable.forEach((key, integer) -> {
             try {
                 write((int)key);
-                write((int)integer);
+                writeInt((int)integer);
             } catch (IOException e) {
                 e.printStackTrace();
             }

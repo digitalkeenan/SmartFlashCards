@@ -2,7 +2,6 @@ package com.example.smartflashcards;
 
 import static java.util.Objects.nonNull;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -14,7 +13,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
-import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
@@ -27,12 +25,12 @@ import com.example.smartflashcards.dialogs.DialogStackFragment;
 import com.example.smartflashcards.dialogs.DialogViewModel;
 import com.example.smartflashcards.dialogs.NewStackDialogFragment;
 import com.example.smartflashcards.dialogs.ProposeCardReviewDialogFragment;
+import com.example.smartflashcards.keenanClasses.MyAutoCloseInputStream;
 import com.example.smartflashcards.keenanClasses.MyFileInputStream;
 import com.example.smartflashcards.keenanClasses.MyFileOutputStream;
 import com.example.smartflashcards.stackDetails.StackDetails;
 import com.example.smartflashcards.stackDetails.StackDetailsViewModel;
 
-import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -41,7 +39,6 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 
@@ -352,6 +349,7 @@ public class MainActivity extends AppCompatActivity {
         String fileName = getString(R.string.answer_card_file);
         MyFileOutputStream outputStream = openOutputStream(this.activeStack, fileName);
         if (nonNull(outputStream)) {
+            outputStream.writeString(getString(R.string.database_version));
             this.cardStackViewModel.saveAlphabeticalStack(outputStream);
             closeOutputStream(this.activeStack, outputStream, fileName);
         }
@@ -406,7 +404,7 @@ public class MainActivity extends AppCompatActivity {
             /**
              * OPTION EXPORT CARDS
              */
-            if (title.equals(getString(R.string.action_export_selection))) {
+            if (title.equals(getString(R.string.action_export_cards))) {
                 Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                 intent.setType("*/*");
                 startActivityForResult(intent, 10);
@@ -435,6 +433,9 @@ public class MainActivity extends AppCompatActivity {
 
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == 10) {
+                /*
+                EXPORT CARDS
+                 */
                 if (resultData != null) {
                     Uri uri = resultData.getData();
 
@@ -469,38 +470,30 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             } else if (requestCode == 20) {
+                /*
+                IMPORT CARDS
+                 */
                 if (resultData != null) {
                     Uri uri = resultData.getData();
                     //TODO: add something to the file to check if it is a valid file (like a special starting string)
 
-                    MyFileInputStream alphaInputStream = null;
+                    //switched to auto-close input stream to fix Bad File Descriptor error
+                    // which randomly would stop the read in the middle
+                    MyAutoCloseInputStream alphaInputStream = null;
                     try {
                         ParcelFileDescriptor pfd = this.getContentResolver().
                                         openFileDescriptor(uri, "r");
-
-                        alphaInputStream = new MyFileInputStream(pfd.getFileDescriptor());
+                        //alphaInputStream = new MyFileInputStream(pfd.getFileDescriptor());
+                        alphaInputStream = new MyAutoCloseInputStream(pfd);
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                     }
 
-                    try {
-                        alphaInputStream.read();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    int numberOfCards = 0;
-                    try {
-                        numberOfCards = alphaInputStream.read();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    alphaInputStream.readString(); // version code
+                    alphaInputStream.readInt(); // next ID
+                    int numberOfCards = alphaInputStream.readInt();
                     for (int cardIndex=0; cardIndex < numberOfCards; cardIndex++) {
-                        Integer idNumber = null;
-                        try {
-                            idNumber = alphaInputStream.read();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        alphaInputStream.readInt(); // ID number
                         QuestionCard questionCard = new QuestionCard(alphaInputStream);
                         questionCard.getAnswers().forEach((key, answer) -> {
                             this.cardStackViewModel.addQuestionCard(questionCard.getCardText(),

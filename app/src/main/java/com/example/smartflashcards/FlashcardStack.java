@@ -43,24 +43,37 @@ public class FlashcardStack {
 
         // load question and answer stacks
         int nextID = 0;
-        try {
-            nextID = alphaInputStream.read();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (version.equals("0.02")) {
+            try {
+                nextID = alphaInputStream.read();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            String alphaVersion = alphaInputStream.readString();
+            nextID = alphaInputStream.readInt();
         }
         this.questionCardStack.setNextID(nextID);
         int numberOfCards = 0;
-        try {
-            numberOfCards = alphaInputStream.read();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (version.equals("0.02")) {
+            try {
+                numberOfCards = alphaInputStream.read();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            numberOfCards = alphaInputStream.readInt();
         }
         for (int cardIndex=0; cardIndex < numberOfCards; cardIndex++) {
             Integer idNumber = null;
-            try {
-                idNumber = alphaInputStream.read();
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (version.equals("0.02")) {
+                try {
+                    idNumber = alphaInputStream.read();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                idNumber = alphaInputStream.readInt();
             }
             QuestionCard questionCard = new QuestionCard(alphaInputStream);
 
@@ -196,11 +209,19 @@ public class FlashcardStack {
     public int addQuizCard(String question, int placement) {
         QuizCard quizCard = new QuizCard(question, placement, false);
         int idNumber = this.questionCardStack.getCurrentID();
-        int position = this.quizStack.addNode(idNumber, quizCard, true);
+        int position = this.quizStack.addNode(idNumber, quizCard, true, 0);
         return position;
     }
 
     public int moveQuizCard(int placement) {
+        return moveQuizCard(placement, true, 0);
+    }
+
+    public int moveQuizCard(int placement, int limit) {
+        return moveQuizCard(placement, false, limit);
+    }
+
+    public int moveQuizCard(int placement, boolean newCard, int limit) {
         // This moves the first card to the location number given
 
         //move stack's current node pointer to first card and capture that card here
@@ -209,7 +230,7 @@ public class FlashcardStack {
         int idNumber = this.quizStack.getCurrentID();
         //delete stack's current node
         this.quizStack.deleteNode();
-        int finalPlacement = this.quizStack.addNode(idNumber, card, false); // not new card
+        int finalPlacement = this.quizStack.addNode(idNumber, card, newCard, limit); // not new card
         return finalPlacement;
     }
 

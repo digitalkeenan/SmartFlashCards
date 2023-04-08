@@ -2,6 +2,7 @@ package com.example.smartflashcards.cards;
 
 import androidx.annotation.NonNull;
 
+import com.example.smartflashcards.keenanClasses.MyAutoCloseInputStream;
 import com.example.smartflashcards.keenanClasses.MyFileInputStream;
 import com.example.smartflashcards.keenanClasses.MyFileOutputStream;
 
@@ -28,18 +29,28 @@ public class QuestionCard extends FlashCard {
 
     public QuestionCard(MyFileInputStream inputStream) {
         super(inputStream);
+        int numberAnswers = 0;
         this.answers = new Hashtable();
         try {
             this.nextKey = inputStream.read();
-            int numberAnswers = inputStream.read();
-            int key;
-            for (int answer = 0; answer < numberAnswers; answer++) {
-                key = inputStream.read();
-                this.answers.put(key, inputStream.readString());
-            }
+            numberAnswers = inputStream.read();
         } catch (IOException e) {
             e.printStackTrace();
         }
+        this.answers = inputStream.readHashString(numberAnswers);
+    }
+
+    public QuestionCard(MyAutoCloseInputStream inputStream) {
+        super(inputStream);
+        int numberAnswers = 0;
+        this.answers = new Hashtable();
+        try {
+            this.nextKey = inputStream.read();
+            numberAnswers = inputStream.read();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        this.answers = inputStream.readHashString(numberAnswers);
     }
 
     public void writeFile (@NonNull MyFileOutputStream outputStream) {

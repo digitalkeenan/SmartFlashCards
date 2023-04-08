@@ -1,13 +1,14 @@
 <resources>
     <string name="app_name">Smart Flash Cards</string>
-    <string name="database_version">0.02</string>
+    <string name="database_version">0.03</string>
     <string name="action_settings">Settings</string>
     <string name="action_delete_selection">Delete Selection</string>
     <string name="action_review_selection">Review Selection</string>
     <string name="action_edit_selection">Edit Selection</string>
-    <string name="action_export_selection">Export Selection</string>
+    <string name="action_export_cards">Export Cards</string>
     <string name="action_import_cards">Import Cards</string>
     <string name="action_review_details">Review Details</string>
+    <string name="action_calculate_grade">Calculate Grade</string>
     <string name="action_edit_question">Edit Question</string>
     <string name="action_review_quiz_stack">Review Quiz Stack</string>
     <string name="action_randomize">Reset and Randomize</string>
@@ -32,6 +33,7 @@
     <string name="continueButton">Continue</string> <!--TODO: replace all uses with more descriptive actions -->
     <string name="cancelButton">Cancel</string>
     <string name="changeButton">Change</string>
+    <string name="deferButton">Defer</string>
     <string name="removeButton">Remove</string>
     <string name="saveButton">Save</string>
     <string name="submitButton">Submit</string>

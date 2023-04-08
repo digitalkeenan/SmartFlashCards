@@ -23,6 +23,20 @@
             android:layout_weight="1" />
 
         <TextView
+            android:id="@+id/quiz_stats"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:text="@string/error"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/card_stats"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="@string/error"
+            android:layout_weight="1" />
+
+        <TextView
             android:id="@+id/quiz_question"
             android:layout_width="match_parent"
             android:layout_height="50dp"
@@ -50,6 +64,13 @@
             android:text="@string/submitButton"/>
 
     </LinearLayout>
+
+    <Button
+        android:id="@+id/button_defer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:text="@string/deferButton"/>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/add_card_button"

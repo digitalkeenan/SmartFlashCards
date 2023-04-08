@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Hashtable;
 
 public class MyAutoCloseInputStream extends ParcelFileDescriptor.AutoCloseInputStream {
 
@@ -50,5 +51,35 @@ public class MyAutoCloseInputStream extends ParcelFileDescriptor.AutoCloseInputS
             e.printStackTrace();
         }
         return (val > 0);
+    }
+
+    // read string hashtable
+    public Hashtable readHashString (int hashSize) {
+        Hashtable hashtable = new Hashtable();
+        try {
+            int key;
+            for (int answer = 0; answer < hashSize; answer++) {
+                key = super.read();
+                hashtable.put(key, readString());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return hashtable;
+    }
+
+    // read int hashtable
+    public Hashtable readHashInt (int hashSize) {
+        Hashtable hashtable = new Hashtable();
+        try {
+            int key;
+            for (int answer = 0; answer < hashSize; answer++) {
+                key = super.read();
+                hashtable.put(key, readInt());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return hashtable;
     }
 }

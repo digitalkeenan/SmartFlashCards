@@ -1,5 +1,6 @@
 package com.example.smartflashcards.cards;
 
+import com.example.smartflashcards.keenanClasses.MyAutoCloseInputStream;
 import com.example.smartflashcards.keenanClasses.MyFileInputStream;
 import com.example.smartflashcards.keenanClasses.MyFileOutputStream;
 
@@ -14,6 +15,9 @@ public class FlashCard {
     }
 
     public FlashCard (MyFileInputStream inputStream) {
+        this.cardText = inputStream.readString();
+    }
+    public FlashCard (MyAutoCloseInputStream inputStream) {
         this.cardText = inputStream.readString();
     }
 

@@ -27,21 +27,38 @@ public class QuizCard extends FlashCard {
         this.jeopardyCard = jeopardyCard;
     }
 
-    public QuizCard(MyFileInputStream inputStream) {
+    public QuizCard(String version, MyFileInputStream inputStream) {
         super(inputStream); //reads the question string
-        this.correctAnswerCount = new Hashtable();
-        try {
-            this.numberWrongResponses = inputStream.read();
-            this.lastPlacement = inputStream.read();
-            this.jeopardyCard = inputStream.readBoolean();
-            int numAnswers = inputStream.read();
-            for (int answer = 0; answer < numAnswers; answer++) {
-                int key = inputStream.read();
-                int val = inputStream.read();
-                correctAnswerCount.put(key, val);
+        int numAnswers = 0;
+        if (version.equals("0.02")) {
+            this.correctAnswerCount = new Hashtable();
+            try {
+                this.numberWrongResponses = inputStream.read();
+                this.lastPlacement = inputStream.read();
+                this.jeopardyCard = inputStream.readBoolean();
+                numAnswers = inputStream.read();
+                for (int answer = 0; answer < numAnswers; answer++) {
+                    int key = inputStream.read();
+                    int val = inputStream.read();
+                    correctAnswerCount.put(key, val);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } else {
+            try {
+                this.numberWrongResponses = inputStream.read();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            this.lastPlacement = inputStream.readInt();
+            this.jeopardyCard = inputStream.readBoolean();
+            try {
+                numAnswers = inputStream.read();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            this.correctAnswerCount = inputStream.readHashInt(numAnswers);
         }
     }
 
@@ -49,7 +66,7 @@ public class QuizCard extends FlashCard {
         super.writeFile(outputStream);
         try {
             outputStream.write(this.numberWrongResponses);
-            outputStream.write(this.lastPlacement);
+            outputStream.writeInt(this.lastPlacement);
             outputStream.writeBoolean(this.jeopardyCard);
             outputStream.writeHashInt(this.correctAnswerCount);
             outputStream.flush();

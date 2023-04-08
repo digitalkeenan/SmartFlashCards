@@ -10,6 +10,7 @@
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/text_margin"
+        android:textColor="@color/black"
         android:textAppearance="?attr/textAppearanceListItem" />
 
     <TextView
@@ -17,5 +18,6 @@
         android:layout_width="50dp"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/text_margin"
+        android:textColor="@color/black"
         android:textAppearance="?attr/textAppearanceListItem" />
 </LinearLayout>
