@@ -39,6 +39,16 @@ public class QuizCardReviewFragment extends Fragment {
     private CardStackViewModel cardStackViewModel;
 
     private MenuItem clearStatistics;
+    private MenuItem moveToTop;
+
+    private TextView questionLabelView;
+    private TextView questionTextView;
+    private TextView positionTextView;
+    private TextView placementTextView;
+    private TextView statusTextView;
+    private TextView wrongResponsesTextView;
+
+    private QuizCard quizCard;
 
     /**
      * Mandatory constructor for the fragment manager to instantiate the
@@ -61,26 +71,27 @@ public class QuizCardReviewFragment extends Fragment {
         View view = binding.getRoot();
         setAdapter(view);
 
-        TextView questionLabelView = view.findViewById(R.id.questionLabel);
-        TextView questionTextView = view.findViewById(R.id.questionTextView);
-        TextView positionTextView = view.findViewById(R.id.positionTextView);
-        TextView placementTextView = view.findViewById(R.id.placementTextView);
-        TextView wrongResponsesTextView = view.findViewById(R.id.wrongResponsesTextView);
+        this.questionLabelView = view.findViewById(R.id.questionLabel);
+        this.questionTextView = view.findViewById(R.id.questionTextView);
+        this.positionTextView = view.findViewById(R.id.positionTextView);
+        this.placementTextView = view.findViewById(R.id.placementTextView);
+        this.statusTextView = view.findViewById(R.id.statusTextView);
+        this.wrongResponsesTextView = view.findViewById(R.id.wrongResponsesTextView);
 
-        questionLabelView.setText(this.cardStackViewModel.getStackDetails().getValue().getQuestionLabel());
+        this.questionLabelView.setText(this.cardStackViewModel.getStackDetails().getValue().getQuestionLabel());
 
-        QuizCard quizCard = (QuizCard) this.cardStackViewModel.getSelectionCard();
-        if (nonNull(quizCard)) {
-            if (quizCard.isJeopardy()) {
-                questionTextView.setText(R.string.jeopardy_card_label + quizCard.getCardText());
+        this.quizCard = (QuizCard) this.cardStackViewModel.getSelectionCard();
+        if (nonNull(this.quizCard)) {
+            if (this.quizCard.isJeopardy()) {
+                this.questionTextView.setText(R.string.jeopardy_card_label + this.quizCard.getCardText());
             } else {
-                questionTextView.setText(quizCard.getCardText());
+                this.questionTextView.setText(this.quizCard.getCardText());
             }
-            positionTextView.setText(this.cardStackViewModel.getSelectionPosition().toString());
-            placementTextView.setText(String.valueOf(quizCard.getLastPlacement()));
-            wrongResponsesTextView.setText(String.valueOf(quizCard.getNumberWrongResponses()));
+            this.positionTextView.setText(this.cardStackViewModel.getSelectionPosition().toString());
+            updatePlacementNumbers();
+            this.wrongResponsesTextView.setText(String.valueOf(this.quizCard.getNumberWrongResponses()));
 
-            QuestionCard questionCard = this.cardStackViewModel.findQuestionCard(quizCard.getCardText());
+            QuestionCard questionCard = this.cardStackViewModel.findQuestionCard(this.quizCard.getCardText());
             quizCard.getCorrectAnswerCount().forEach((key, count) -> {
                 String answer = questionCard.getAnswers().get((Integer) key).toString();
                 this.adapter.addData(answer, (Integer) count);
@@ -108,6 +119,7 @@ public class QuizCardReviewFragment extends Fragment {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         this.clearStatistics = menu.add(R.string.action_clear_statistics);
+        this.moveToTop = menu.add(R.string.action_move_to_top);
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -117,8 +129,18 @@ public class QuizCardReviewFragment extends Fragment {
         if (nonNull(title)) { //check for null because back button also calls this and has no title
             if (title.equals(clearStatistics.getTitle())) { //TODO: if this works, change all my options code to work this way
                 // TODO: create dialog to ask if sure, then call quizCard.clearStatistics()
-                //  also must add observer to call clearAnswers method in this fragment
-                ((QuizCard) this.cardStackViewModel.getSelectionCard()).clearStatistics();
+                //  also must add observer to call clearAnswers and updatePlacementNumbers methods in this fragment
+                QuizCard quizCard = (QuizCard) this.cardStackViewModel.getSelectionCard();
+                clearCardStatistics(quizCard);
+                this.cardStackViewModel.setQuizStackChanged(true); // save
+                return true;
+            }
+            if (title.equals(moveToTop.getTitle())) {
+                //TODO: as above, add "are you sure" dialog
+                QuizCard quizCard = (QuizCard) this.cardStackViewModel.getSelectionCard();
+                this.cardStackViewModel.moveQuizCard(quizCard, 0, true);
+                this.positionTextView.setText("0");
+                updatePlacementNumbers();
                 clearAnswers();
                 return true;
             }
@@ -183,6 +205,31 @@ public class QuizCardReviewFragment extends Fragment {
         }
     }
 
+    private void updatePlacementNumbers() {
+        int lastPlacement = this.quizCard.getLastPlacement();
+        String placement;
+        if (lastPlacement < -1) {
+            placement = "GOLD STAR";
+        } else if (lastPlacement < 0) {
+            placement = "SILVER STAR";
+        } else {
+            placement = String.valueOf(lastPlacement);
+        }
+        this.placementTextView.setText(placement);
+        this.statusTextView.setText(String.valueOf(this.quizCard.getStatusPosition()));
+    }
+
+    private void clearCardStatistics(QuizCard quizCard) {
+        int lastPlacement = quizCard.getLastPlacement();
+        if (lastPlacement < -1) {
+            this.cardStackViewModel.decrementGoldStars();
+        } else if (lastPlacement < 0) {
+            this.cardStackViewModel.decrementSilverStars();
+        }
+        quizCard.clearStatistics();
+        updatePlacementNumbers();
+        clearAnswers();
+    }
 
     /**
      * CHANGE NOTIFICATIONS

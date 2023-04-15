@@ -76,7 +76,7 @@ public class NewStackDialogFragment extends DialogStackFragment {
         //TODO: force all-caps and check for invalid characters,etc.
         // note: the field is set to all caps, but the user can still hit the shift key and break that
         File directory = new File(getActivity().getFilesDir(), getString(R.string.stack_directory));
-        File stack = new File(directory, this.editStackName.getText().toString());
+        File stack = new File(directory, this.editStackName.getText().toString().trim());
         if (stack.exists()) {
             DialogData newDialogData = new DialogData(DialogData.Type.CONTINUE, DialogData.Action.noAction);
             newDialogData.setMessage(this.editStackName.getText().toString() + " already exists");

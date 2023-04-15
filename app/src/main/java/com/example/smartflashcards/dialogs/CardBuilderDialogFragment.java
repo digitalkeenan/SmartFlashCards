@@ -239,8 +239,8 @@ public class CardBuilderDialogFragment extends DialogStackFragment {
     }
 
     private void save() {
-        String question = this.editQuestion.getText().toString();
-        String answer = this.editAnswer.getText().toString();
+        String question = this.editQuestion.getText().toString().trim();
+        String answer = this.editAnswer.getText().toString().trim();
 
         if (nonNull(super.dialogData)) {
             switch (super.dialogData.getAction()) {

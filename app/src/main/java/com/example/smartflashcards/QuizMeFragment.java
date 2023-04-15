@@ -25,6 +25,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.smartflashcards.cards.QuestionCard;
+import com.example.smartflashcards.cards.QuizCard;
 import com.example.smartflashcards.databinding.FragmentQuizmeBinding;
 import com.example.smartflashcards.dialogs.DialogData;
 
@@ -162,14 +163,22 @@ public class QuizMeFragment extends Fragment {
 
             this.editResponse.setText("");
             if (nonNull(quizCard)) {
+                // TODO: only show last_status in debug mode
+                //       for public users, show grade for non-stars
                 card_stats = "this card: ";
                 int last_placement = quizCard.getLastPlacement();
+                int last_status = quizCard.getStatusPosition();
                 if (last_placement < -1) {
-                    card_stats += "GOLD STAR";
+                    card_stats += "GOLD STAR (" + last_status + ")";
                 } else if (last_placement < 0) {
-                    card_stats += "SILVER STAR";
+                    card_stats += "SILVER STAR (" + last_status + ")";
+                } else if ((last_placement == 0) & (last_status != 0)) {
+                    card_stats += "NEW (" + last_status + ")";
                 } else {
                     card_stats += "last position = " + last_placement;
+                    if (last_placement != last_status) {
+                        card_stats += " (status = " + last_status + ")";
+                    }
                 }
                 this.editResponse.setFocusable(true);
                 question = quizCard.getCardText();
@@ -261,28 +270,18 @@ public class QuizMeFragment extends Fragment {
 
     private void deferCard () {
         int quizSize = this.cardStackViewModel.getQuizSize();
-        //TODO: decide if it's better to keep the existing lastPlacement value
-        int lastPlacement = this.cardStackViewModel.getQuizMeCard().getValue().getLastPlacement();
         int starIntrusionDepth = 10; // TODO: when the other uses of 10 are changed to be statistical, make this match
         int nonstarLimit = quizSize - this.cardStackViewModel.getSilverStars()
                 - this.cardStackViewModel.getGoldStars();
         nonstarLimit = Math.max(nonstarLimit, 0) + starIntrusionDepth;
-        int finalPlacement = this.cardStackViewModel.moveQuizCard(nonstarLimit);
+        QuizCard quizCard = this.cardStackViewModel.getQuizMeCard().getValue();
+        int finalPlacement = this.cardStackViewModel.moveQuizCard(quizCard, nonstarLimit, false);
         String message = "Moved to ";
         if (finalPlacement < 0) {
             message += "last position";
         } else {
             message += "position " + finalPlacement;
         }
-
-        if (lastPlacement < 0) {
-            if (lastPlacement < -1) {
-                this.cardStackViewModel.decrementGoldStars();
-            } else {
-                this.cardStackViewModel.decrementSilverStars();
-            }
-        }
-        updateQuizStats();
 
         DialogData dialogData = new DialogData(DialogData.Type.CONTINUE, DialogData.Action.noAction);
         dialogData.setMessage(message);
@@ -292,6 +291,13 @@ public class QuizMeFragment extends Fragment {
     private void checkResponse () {
         String response = editResponse.getText().toString().trim();
         QuestionCard questionCard = cardStackViewModel.findQuestionCard(question);
+
+        int starIntrusionDepth = 10; // TODO: when the other uses of 10 are changed to be statistical,
+                                     //       make this match
+        int correctMultiplier = 4; // TODO: Perhaps change to exponent instead of multiplier;
+                                   //       either way, drive the number statistically for each user
+        int missDivisor = 2;  //TODO: statistically drive this number for each user
+                              //      also may need different formula for first time
 
         if (nonNull(questionCard) && nonNull(response) && !response.equals("")) {
 
@@ -331,62 +337,55 @@ public class QuizMeFragment extends Fragment {
             result += response;
             int numberAnswers = questionCard.getAnswers().size();
             int quizSize = this.cardStackViewModel.getQuizSize();
-            int newPlacement;
             //TODO: add randomization to somewhat earlier (perhaps by multiplying with 0.9 to 1)
             // but be careful to not break silver/gold check
             int lastPlacement = this.cardStackViewModel.getQuizMeCard().getValue().getLastPlacement();
-            int starIntrusionDepth = 10; // TODO: when the other uses of 10 are changed to be statistical, make this match
+            int lastStatus = this.cardStackViewModel.getQuizMeCard().getValue().getStatusPosition();
             int nonstarLimit = quizSize - this.cardStackViewModel.getSilverStars()
                                         - this.cardStackViewModel.getGoldStars();
             nonstarLimit = Math.max(nonstarLimit, 0) + starIntrusionDepth;
-            int finalPlacement;
             if (iterationBoolean) {
-                newPlacement = lastPlacement * 4; //TODO: Perhaps change to exponent instead of multiplier; either way, drive the number statistically for each user
-                if (newPlacement == 0) {
-                    newPlacement = 2;
-                }
+                // CORRECT ANSWER
                 result += "\n--------------\n" + getString(R.string.right_answer);
                 if (numberAnswers > 1) {
                     result += "\n--------------\nAdditional correct answer";
                     result += (numberAnswers > 2) ? "s:" : ":";
                 }
-                finalPlacement = this.cardStackViewModel.moveQuizMeCard(newPlacement, nonstarLimit);
+                QuizCard card = this.cardStackViewModel.moveQuizMeCard(true, correctMultiplier, nonstarLimit);
+                int newPlacement = card.getLastPlacement();
+                int newStatus = card.getStatusPosition();
                 result += iterationString + "\n--------------\n";
-                if (finalPlacement < -1) {
+                if (newPlacement < -1) {
                     result += "GOLD STAR";
-                    if (lastPlacement == -1) {
-                        this.cardStackViewModel.incrementGoldStars();
-                        this.cardStackViewModel.decrementSilverStars();
-                    }
-                } else if (finalPlacement < 0) {
+                    result += " (" + newStatus + ")";
+                } else if (newPlacement < 0) {
                     result += "SILVER STAR";
-                    this.cardStackViewModel.incrementSilverStars();
-                } else if (finalPlacement != newPlacement) {
-                    result += "Status position: " + newPlacement;
-                    result += "\nActual placement: " + finalPlacement;
+                    result += " (" + newStatus + ")";
+                    // TODO: only show position/placement info in debug mode
+                    //       for public users, show new grade
+                    if (newStatus >= quizSize) {
+                        result += "\nPlaced at end";
+                    } else {
+                        result += "\nMoved to position" + newStatus;
+                    }
+                } else if (newStatus == newPlacement) {
+                    result += "Moved to position " + newPlacement;
                 } else {
-                    result += "Moved to position " + finalPlacement;
+                    result += "Status position: " + newStatus;
+                    result += "\nActual placement: " + newPlacement;
                 }
             } else {
+                // INCORRECT ANSWER
                 cardStackViewModel.getQuizMeCard().getValue().recordWrongResponse();
-                int missDivisor = 2;  //TODO: statistically drive this number for each user (also may need different formula for first time)
-                if (lastPlacement < 0) {
-                    newPlacement = Math.min(nonstarLimit, quizSize - 1) / missDivisor;
-                    if (lastPlacement < -1) {
-                        this.cardStackViewModel.decrementGoldStars();
-                    } else {
-                        this.cardStackViewModel.decrementSilverStars();
-                    }
-                } else {
-                    newPlacement = Math.min(nonstarLimit, lastPlacement) / missDivisor;
-                }
+                QuizCard card = this.cardStackViewModel.moveQuizMeCard(false, missDivisor, nonstarLimit);
+                int newPlacement = card.getLastPlacement();
                 result += "\n--------------\n" + getString(R.string.wrong_answer);
                 result += "\n--------------\nCorrect answer";
                 result += (numberAnswers > 1) ? "s:" : ":";
-                finalPlacement = this.cardStackViewModel.moveQuizMeCard(newPlacement);
                 result += iterationString + "\n--------------\n";
-                result += "Moved to position " + finalPlacement;
+                result += "Moved to position " + newPlacement;
             }
+            result += "\n(previous: " + lastPlacement + "," + lastStatus + ")";
 
             updateQuizStats();
 

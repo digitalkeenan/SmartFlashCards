@@ -2,6 +2,7 @@ package com.example.smartflashcards.cardTrees;
 
 import static java.util.Objects.nonNull;
 
+import com.example.smartflashcards.cards.FlashCard;
 import com.example.smartflashcards.cards.QuizCard;
 import com.example.smartflashcards.keenanClasses.MyFileInputStream;
 import com.example.smartflashcards.keenanClasses.MyFileOutputStream;
@@ -59,11 +60,6 @@ public class QuizCardTree extends BinaryCardTree {
                         idNumber = inputStream.readInt();
                     }
                     card = new QuizCard(version, inputStream);
-                    if (card.getLastPlacement() < -1) {
-                        this.goldStars += 1;
-                    } else if (card.getLastPlacement() < 0) {
-                        this.silverStars += 1;
-                    }
                     if (cardIndex == 0) {
                         addNode(card, idNumber);
                     } else {
@@ -82,10 +78,43 @@ public class QuizCardTree extends BinaryCardTree {
         for (int nodesRemaining = questionNodes.size(); nodesRemaining > 0; nodesRemaining--) {
             int nodeNumber = random.nextInt(nodesRemaining); // random number from 0 to nodesRemaining - 1
             CardTreeNode node = questionNodes.get(nodeNumber);
-            QuizCard quizCard = new QuizCard(node.getCard().getCardText(), -1, false);
-            addNode(node.getID(), quizCard, true, 0);
+            QuizCard quizCard = new QuizCard(node.getCard().getCardText(), false);
+            addNode(node.getID(), quizCard, -1, true);
             questionNodes.remove(nodeNumber);
         }
+    }
+
+    @Override
+    public CardTreeNode addNode(FlashCard card, Integer idNumber) {
+        int lastPlacement = ((QuizCard)card).getLastPlacement();
+        if (lastPlacement < -1) {
+            this.incrementGoldStars();
+        } else if (lastPlacement < 0) {
+            this.incrementSilverStars();
+        }
+        return super.addNode(card, idNumber);
+    }
+
+    @Override
+    public CardTreeNode addToEnd(FlashCard card, int idNumber) {
+        int lastPlacement = ((QuizCard)card).getLastPlacement();
+        if (lastPlacement < -1) {
+            this.incrementGoldStars();
+        } else if (lastPlacement < 0) {
+            this.incrementSilverStars();
+        }
+        return super.addToEnd(card, idNumber);
+    }
+
+    @Override
+    public void deleteNode() {
+        int lastPlacement = ((QuizCard)this.getCurrentNode().getCard()).getLastPlacement();
+        if (lastPlacement < -1) {
+            this.decrementGoldStars();
+        } else if (lastPlacement < 0) {
+            this.decrementSilverStars();
+        }
+        super.deleteNode();
     }
 
     public void writeFile (MyFileOutputStream outputStream) {
@@ -134,84 +163,179 @@ public class QuizCardTree extends BinaryCardTree {
         return 0;
     }
 
-    public int addNode (int idNumber, QuizCard card, Boolean newCard, int limit) {
-        // newCard means placement value is set to starting value - not actual position
-        // - this should be used for any artificial (not advanced by quiz success) placement / movement
-        // - if not newCard and position after last, place as silver star (-1) or gold star(-2)
-        int position;
+    public int addNode(int idNumber, QuizCard card, int position, boolean clearStats) {
+        // this should be used for any artificial (not advanced by quiz) placement / movement
+        // if clearStats, placement value is set to starting value
+        // else, placement value is left unchanged
         int last_position = size(); // new last position after adding this one
-        boolean limited_placement = false;
 
+        if (clearStats) {
+            card.setStatusPosition(startPosition);
+            card.setLastPlacement(0); // actual position is only meaningful when placed by quiz
+        }
+
+        // if stack is empty, add as first/head node
+        if (size() == 0) {
+            addNode(card, idNumber);
+            card.setLastPlacement(0);
+            return 0;
+        }
+
+        // if placement is set to -1 or beyond last position, place it last
+        if ((position < 0) || (position > last_position)) {
+            moveToLast();
+            addToEnd(card, idNumber); //adds to end with a tree balancing routine
+            return last_position;
+        }
+
+        // if placement = 0, place at previous to first
+        if (position == 0) {
+            moveToFirst();
+            moveToPrev();
+            addNode(card, idNumber); //adds below super.parentNode
+            return 0;
+        }
+
+        // if not placed above, place in numerical position given
+        getCard(position - 1);
+        moveToNext();
+        //if this position is empty, add here, otherwise, add at furthest prev position
+        while (nonNull(getCurrentNode())) {
+            moveToPrev();
+        }
+        addNode(card, idNumber); //adds below super.parentNode
+        return position;
+    }
+
+    public void reInsertQuizMeNode(int idNumber, QuizCard card, boolean correct, int adjustor, int limit) {
+        // Encodes lastPlacement = -1 for silver star and -2 for gold star
+        // if silver and statusPosition is less than total number of cards, that is the actual placement
+        int newStatus;
+        int last_position = size(); // new last position after adding this one
+        int lastPlacement = card.getLastPlacement();
+        int lastStatus = card.getStatusPosition();
+
+        // if NO OTHER CARDS, just put it back and fix placement = 0
         if (size() == 0) {
             addNode(card, idNumber); //adds as first/head node
-            position = startPosition;
+            card.setLastPlacement(0);
+            return;
+        }
+
+        if (correct) {
+            // if ALREADY GOLD, put back at end and only increase status incrementally
+            if (lastPlacement < -1) {
+                card.setStatusPosition(lastStatus + size());
+                moveToLast();
+                addToEnd(card, idNumber); //adds to end with a tree balancing routine
+                return;
+            }
+
+            if (lastStatus == 0) {
+                newStatus = 2;
+            } else {
+                newStatus = lastStatus * adjustor;
+            }
+
+            // TODO: consider placing cards ahead of similar cards with higher status numbers
+            //       this should be fairly easy for star cards
+            //       For non-star cards getting limited by star depth, this is harder (maybe only do this for star cards)
+            //       Even for star cards, perhaps this is a bad idea, because the user should be tested with the current card pushed far (4x isn't even possible)be
+
+            if (lastPlacement < 0) { // ALREADY SILVER
+                card.setStatusPosition(newStatus);
+                if (newStatus > last_position) {
+                    card.setLastPlacement(-2); // new GOLD STAR
+                    moveToLast();
+                    addToEnd(card, idNumber); //adds to end with a tree balancing routine
+                    return;
+                }
+                // if newStatus <= last_position, this is a silver star not yet ready for gold
+                getCard(newStatus - 1);
+            } else if (newStatus > last_position) {
+                card.setLastPlacement(-1); // new SILVER STAR
+                // for a new silver star, only move it deeper relative to its actual last placement
+                if (lastPlacement == 0) {
+                    newStatus = 2;
+                } else {
+                    newStatus = lastPlacement * adjustor;
+                }
+                card.setStatusPosition(newStatus);
+                if (newStatus > last_position) {
+                    moveToLast();
+                    addToEnd(card, idNumber); //adds to end with a tree balancing routine
+                    return;
+                }
+                // if newStatus <= last_position, place at actual newStatus location
+                getCard(newStatus - 1);
+            } else {
+                // NON-STAR placement might be limited
+                card.setStatusPosition(newStatus);
+                if ((limit > 0) && (newStatus > limit)) {
+                    getCard(limit - 1);
+                    card.setLastPlacement(limit);
+                } else {
+                    getCard(newStatus - 1);
+                    card.setLastPlacement(newStatus);
+                }
+            }
         } else {
-            // if placement is set to -1 or beyond last position, place it last
-            // it may also be placed in last position if placement equals last,
-            // but there it might be randomized elsewhere
-            if (card.getLastPlacement() < 0) {
-                moveToLast();
-                addToEnd(card, idNumber); //adds to end with a tree balancing routine
-                position = -2; // gold star
-            } else if (card.getLastPlacement() > last_position) {
-                moveToLast();
-                addToEnd(card, idNumber); //adds to end with a tree balancing routine
-                position = -1; // silver star
-            } else if (card.getLastPlacement() == 0) {
+            // WRONG ANSWER
+            if (lastPlacement < 0) {
+                newStatus = Math.min(limit, size() - 1) / adjustor;
+            } else if (lastPlacement == 0) {
+                // if lastStatus isn't also 0, lastPlacement is not yet real
+                newStatus = Math.min(limit, lastStatus) / adjustor;
+            } else {
+                newStatus = Math.min(limit, lastPlacement) / adjustor;
+            }
+            card.setLastPlacement(newStatus);
+            card.setStatusPosition(newStatus);
+            if (newStatus == 0) {
                 moveToFirst();
                 moveToPrev();
                 addNode(card, idNumber); //adds below super.parentNode
-                position = 0;
-            } else {
-                position = card.getLastPlacement();
-                if ((limit > 0) && (position > limit)) {
-                    getCard(limit - 1);
-                    limited_placement = true;
-                } else {
-                    getCard(position - 1);
-                }
-                moveToNext();
-                //if this position is empty, add here, otherwise, add at furthest prev position
-                while (nonNull(getCurrentNode())) {
-                    moveToPrev();
-                }
-                addNode(card, idNumber); //adds below super.parentNode
+                return;
             }
-        }
-        if (newCard) {
-            card.setPosition(startPosition);
-        } else {
-            card.setPosition(position);
+            getCard(newStatus - 1);
         }
 
-        if (limited_placement) {
-            return limit;
+        // place after card selected above
+        moveToNext();
+        //if this position is empty, add here, otherwise, add at furthest prev position
+        while (nonNull(getCurrentNode())) {
+            moveToPrev();
         }
-        return position;
-    }
+        addNode(card, idNumber); //adds below super.parentNode
+        return;
+     }
 
     public ArrayList<Integer> getStats() {
         ArrayList<Integer> stats = new ArrayList<>(6);
         int gradeAscore;
         int gradeBscore;
         int gradeCscore;
+        int lastStatus;
         for (int index = 0; index < 6; index++) {
             stats.add(0);
         }
 
-        int size = size();
-        if (size > 512) {
+        //int size = size();
+        //if (size > 512) {
             gradeAscore = 512;
             gradeBscore = 128;
             gradeCscore = 32;
-        } else {
+            // TODO: user settable grade threshold(s) or some sort of statistical idea?
+            //       below is for using lastPlacement instead of lastStatus
+        /*} else {
             gradeAscore = size - 1;
             gradeBscore = gradeAscore / 4;
             gradeCscore = gradeBscore / 4;
-        }
+        }*/
         moveToFirst();
         QuizCard quizCard = (QuizCard) getCard();
         while (nonNull(quizCard)) {
+            lastStatus = quizCard.getStatusPosition();
             Hashtable answerCounts = quizCard.getCorrectAnswerCount();
             iterationBoolean = false;
             answerCounts.forEach((key, count) -> {
@@ -226,15 +350,15 @@ public class QuizCardTree extends BinaryCardTree {
                 // I (not tried)
                 stats.set(0, stats.get(0) + 1);
             } else if (quizCard.getLastPlacement() < 0) {
-                // A with star
+                // A with star (silver star drops status back down, but still grades as A)
                 stats.set(5, stats.get(5) + 1);
-            } else if (quizCard.getLastPlacement() >= gradeAscore) {
+            } else if (lastStatus >= gradeAscore) {
                 // A
                 stats.set(5, stats.get(5) + 1);
-            } else if (quizCard.getLastPlacement() >= gradeBscore) {
+            } else if (lastStatus >= gradeBscore) {
                 // B
                 stats.set(4, stats.get(4) + 1);
-            } else if (quizCard.getLastPlacement() >= gradeCscore) {
+            } else if (lastStatus >= gradeCscore) {
                 // C
                 stats.set(3, stats.get(3) + 1);
             } else {

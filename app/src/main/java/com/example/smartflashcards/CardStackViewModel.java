@@ -337,8 +337,8 @@ public class CardStackViewModel extends ViewModel {
                 }
 
                 // add quiz card
-                int position = this.flashcardStack.addQuizCard(newCard.getCardText(), placement);
-                if (position == 0) { // if on top of stack
+                int finalPlacement = this.flashcardStack.addQuizCard(newCard.getCardText(), placement);
+                if (finalPlacement == 0) { // if on top of stack
                     updateQuizMeCard();
                 }
                 if (getStackType() == FlashcardViewFilter.StackType.QUIZ) {
@@ -659,23 +659,17 @@ public class CardStackViewModel extends ViewModel {
         this.quizMeCard.setValue(null);
     }
 
-    public int moveQuizMeCard(int placement) {
-        return moveQuizMeCard(placement, 0);
-    }
-
-    public int moveQuizMeCard(int placement, int limit) {
-        // This moves the first card to the location number given
-        int finalPlacement = this.flashcardStack.moveQuizCard(placement, limit);
+    public QuizCard moveQuizMeCard(boolean correct, int adjustor, int limit) {
+        QuizCard card = this.flashcardStack.moveQuizMeCard(correct, adjustor, limit);
         updateQuizMeCard();
         setQuizStackChanged(true);
-        return finalPlacement;
+        return card;
     }
 
 
-    public int moveQuizCard(int placement) {
-        // TODO: make flashcardStack.moveQuizCard to work on any card (pass in current position?)
-        // This moves the first card to the location number given
-        int finalPlacement = this.flashcardStack.moveQuizCard(placement);
+    public int moveQuizCard(QuizCard quizCard, int position, boolean clearStats) {
+        // This moves the card to the location number given
+        int finalPlacement = this.flashcardStack.moveQuizCard(quizCard, position, clearStats);
         updateQuizMeCard();
         //TODO: add notify-moved
         setQuizStackChanged(true);

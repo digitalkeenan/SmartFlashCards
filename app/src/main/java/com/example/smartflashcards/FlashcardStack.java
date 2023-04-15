@@ -206,32 +206,31 @@ public class FlashcardStack {
         this.quizStack = new QuizCardTree(this.questionCardStack.getNodes());
     }
 
-    public int addQuizCard(String question, int placement) {
-        QuizCard quizCard = new QuizCard(question, placement, false);
+    public int addQuizCard(String question, int position) {
+        QuizCard quizCard = new QuizCard(question, false);
         int idNumber = this.questionCardStack.getCurrentID();
-        int position = this.quizStack.addNode(idNumber, quizCard, true, 0);
-        return position;
+        int finalPlacement = this.quizStack.addNode(idNumber, quizCard, position, true);
+        return finalPlacement;
     }
 
-    public int moveQuizCard(int placement) {
-        return moveQuizCard(placement, true, 0);
+    public int moveQuizCard(QuizCard card, int position, boolean clearStats) {
+        int idNumber = this.quizStack.getCurrentID();
+        //delete stack's current node
+        this.quizStack.deleteNode();
+        int finalPlacement = this.quizStack.addNode(idNumber, card, position, clearStats);
+        return finalPlacement;
     }
 
-    public int moveQuizCard(int placement, int limit) {
-        return moveQuizCard(placement, false, limit);
-    }
-
-    public int moveQuizCard(int placement, boolean newCard, int limit) {
+    public QuizCard moveQuizMeCard(boolean correct, int adjustor, int limit) {
         // This moves the first card to the location number given
 
         //move stack's current node pointer to first card and capture that card here
         QuizCard card = (QuizCard) this.quizStack.moveToFirst().getCard();
-        card.setPosition(placement);
         int idNumber = this.quizStack.getCurrentID();
         //delete stack's current node
         this.quizStack.deleteNode();
-        int finalPlacement = this.quizStack.addNode(idNumber, card, newCard, limit); // not new card
-        return finalPlacement;
+        this.quizStack.reInsertQuizMeNode(idNumber, card, correct, adjustor, limit);
+        return card;
     }
 
     public boolean quizCardValidate(boolean addInvalidToStack) {
